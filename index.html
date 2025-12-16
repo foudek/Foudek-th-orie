@@ -9,12 +9,13 @@ body {
   margin: 0;
   padding: 0;
   font-family: Arial, sans-serif;
-  background: #000000;
+  background: #000;
   color: #e5e7eb;
 }
 
 h1, h2, h3 {
   text-align: center;
+  margin-top: 30px;
 }
 
 .container {
@@ -31,10 +32,6 @@ h1, h2, h3 {
   border-radius: 12px;
   padding: 20px;
   width: 330px;
-}
-
-.card h2 {
-  margin-bottom: 15px;
 }
 
 label {
@@ -78,33 +75,36 @@ button:hover {
   font-size: 18px;
 }
 
-/* SECTION COURS */
 .course {
-  max-width: 900px;
+  max-width: 950px;
   margin: 60px auto;
-  padding: 25px;
+  padding: 30px;
   background: #020617;
   border: 1px solid #334155;
   border-radius: 12px;
 }
 
-.course h2 {
-  color: #60a5fa;
+.course p {
+  line-height: 1.7;
+  margin-bottom: 16px;
 }
 
-.course p, .course ul, .course li {
-  line-height: 1.6;
-  margin-bottom: 15px;
+.course ul {
+  margin-left: 20px;
 }
 
-.blue {
-  color: #60a5fa;
-  font-weight: bold;
+.math {
+  background: #0f172a;
+  padding: 12px;
+  border-radius: 8px;
+  font-family: "Times New Roman", serif;
+  font-size: 18px;
+  text-align: center;
 }
 
 hr {
-  border:1px solid #334155;
-  margin:30px 0;
+  border: 1px solid #334155;
+  margin: 35px 0;
 }
 </style>
 </head>
@@ -115,9 +115,8 @@ hr {
 
 <div class="container">
 
-  <!-- MODE FOUDEK -->
   <div class="card">
-    <h2>🔵 Théorie de FOUDEK</h2>
+    <h2>Mode FOUDEK</h2>
 
     <label>Joueurs dans l’intervalle</label>
     <input type="number" id="I1" value="4">
@@ -129,13 +128,11 @@ hr {
     <input type="number" id="L1" value="2">
 
     <button onclick="calculateLimited()">Calculer</button>
-
     <div class="result" id="result1">—</div>
   </div>
 
-  <!-- MODE CLASSIQUE -->
   <div class="card">
-    <h2>🔴 Modèle classique</h2>
+    <h2>Modèle classique</h2>
 
     <label>Joueurs dans l’intervalle</label>
     <input type="number" id="I2" value="4">
@@ -147,103 +144,104 @@ hr {
     <input type="number" id="L2" value="2">
 
     <button onclick="calculateFull()">Calculer</button>
-
     <div class="result" id="result2">—</div>
   </div>
 
 </div>
 
-<!-- SECTION COURS -->
 <div class="course">
-  <h2>📘 Cours – Théorie de FOUDEK</h2>
+  <h2>Cours – Technique de FOUDEK</h2>
 
   <p>
-    La <strong>théorie de FOUDEK</strong> repose sur un principe fondamental :
-    <em>un joueur innocent cherche toujours à maximiser la probabilité de toucher un loup,
-    en utilisant uniquement l’information logique disponible</em>.
+    La technique de FOUDEK s’appuie sur un principe optimiste :
+    un joueur innocent raisonne en cherchant à réduire au maximum
+    la probabilité de voter un autre innocent.
   </p>
 
-  <p class="blue">
-    👉 La bulle bleue représente la <strong>probabilité conditionnelle</strong> qu’un joueur hors intervalle soit loup selon la théorie de FOUDEK.
+  <p>
+    Le jeu est découpé en intervalles de vote.
+    À partir des événements observés (votes, morts, réactions),
+    on construit des intervalles contenant un nombre limité de loups.
   </p>
 
   <hr>
 
-  <h3>❓ Pourquoi l’intervalle contient au maximum 1 loup</h3>
+  <h3>Pourquoi il n’y a jamais plus de 1 loup sur 4</h3>
 
   <p>
-    Dans une partie, un joueur <strong>innocent</strong> n’a aucun intérêt
-    à voter un autre innocent. La théorie de FOUDEK part donc du principe que :
-  </p>
-
-  <p class="blue">
-    👉 L’intervalle contient 0 ou 1 loup maximum (0/4 ou 1/4).
+    Dans la technique de FOUDEK, on considère uniquement les cas
+    où un intervalle de 4 joueurs contient 0 ou 1 loup.
   </p>
 
   <p>
-    Si l’intervalle contenait 2 loups, la probabilité pour un joueur hors intervalle d’être innocent
-    serait plus faible que l’inverse, rendant la décision de voter hors intervalle moins optimale pour un innocent.
-    On exclut donc ces scénarios.
+    La raison est purement probabiliste :
+    si un intervalle contenait 2 loups sur 4,
+    alors la probabilité qu’un joueur innocent vote un innocent
+    serait plus élevée que la probabilité de voter un loup.
+  </p>
+
+  <p>
+    Autrement dit, dépasser 1/4 rend la décision irrationnelle
+    pour un innocent cherchant à optimiser son vote.
+    Ces mondes sont donc exclus par construction dans la technique FOUDEK.
   </p>
 
   <hr>
 
-  <h3>🧮 Détail du calcul pour un loup hors intervalle</h3>
+  <h3>Détail du calcul de la probabilité hors intervalle</h3>
 
   <p>
     On note :
   </p>
+
   <ul>
-    <li><strong>I</strong> : nombre de joueurs dans l’intervalle</li>
-    <li><strong>R</strong> : nombre de joueurs hors intervalle</li>
-    <li><strong>L</strong> : nombre de loups vivants</li>
-    <li><strong>k</strong> : nombre de loups dans l’intervalle</li>
+    <li>I : nombre de joueurs dans l’intervalle</li>
+    <li>R : nombre de joueurs hors intervalle</li>
+    <li>L : nombre de loups vivants</li>
+    <li>k : nombre de loups dans l’intervalle</li>
   </ul>
 
   <p>
-    La probabilité qu’un joueur hors intervalle soit loup se calcule comme suit :
+    Pour chaque valeur possible de k, on calcule le nombre de configurations possibles :
   </p>
+
+  <div class="math">
+    C(I, k) × C(R, L − k)
+  </div>
 
   <p>
-    1️⃣ On énumère tous les cas possibles de k (ici 0 ou 1).<br>
-    2️⃣ Pour chaque k, on calcule le poids combinatoire :
+    Ces valeurs sont normalisées afin d’obtenir la probabilité de chaque cas,
+    puis pondérées par la probabilité qu’un joueur hors intervalle soit loup :
   </p>
 
-  <p style="font-family:monospace; background:#111; padding:8px; border-radius:6px;">
-    W(k) = C(I, k) × C(R, L-k)
-  </p>
-
-  <p>
-    3️⃣ On normalise ces poids pour obtenir les probabilités des cas :
-  </p>
-
-  <p style="font-family:monospace; background:#111; padding:8px; border-radius:6px;">
-    P(k) = W(k) / Σ W(i)
-  </p>
-
-  <p>
-    4️⃣ Enfin, on calcule la probabilité conditionnelle qu’un joueur hors intervalle soit loup :
-  </p>
-
-  <p style="font-family:monospace; background:#111; padding:8px; border-radius:6px;">
-    P(loup hors intervalle) = Σ P(k) × ((L - k) / R)
-  </p>
+  <div class="math">
+    (L − k) / R
+  </div>
 
   <hr>
 
-  <h3>📐 Équation universelle finale</h3>
+  <h3>Équation universelle finale</h3>
 
-  <p style="font-family:monospace; background:#111; padding:8px; border-radius:6px;">
-    P_R = Σ (k=0 à k_max) [ C(I, k) × C(R, L-k) / Σ (i=0 à k_max) C(I, i) × C(R, L-i) ] × (L - k)/R
-  </p>
-
-  <p>
-    Où :<br>
-    <strong>k_max</strong> = maximum de loups autorisés dans l’intervalle (selon FOUDEK)<br>
-    <strong>I</strong> = joueurs dans l’intervalle<br>
-    <strong>R</strong> = joueurs hors intervalle<br>
-    <strong>L</strong> = loups vivants
-  </p>
+  <div class="math">
+    P<sub>R</sub> =
+    Σ<sub>k = 0</sub><sup>k<sub>max</sub></sup>
+    <span>
+      (
+      <span>
+        C(|I|, k) · C(|R|, L − k)
+      </span>
+      /
+      <span>
+        Σ<sub>i = 0</sub><sup>k<sub>max</sub></sup>
+        C(|I|, i) · C(|R|, L − i)
+      </span>
+      )
+    </span>
+    ×
+    <span>
+      (L − k) / |R|
+    </span>
+  </div>
 
 </div>
 
@@ -265,8 +263,7 @@ function calculateLimited() {
   let total = 0, p = 0;
 
   for (let k = Math.max(0, L - R); k <= Math.min(1, I, L); k++) {
-    const w = comb(I, k) * comb(R, L - k);
-    total += w;
+    total += comb(I, k) * comb(R, L - k);
   }
 
   for (let k = Math.max(0, L - R); k <= Math.min(1, I, L); k++) {
@@ -274,8 +271,8 @@ function calculateLimited() {
     p += (w / total) * ((L - k) / R);
   }
 
-  document.getElementById("result1").innerHTML =
-    "<span class='blue'>Probabilité FOUDEK : " + (p * 100).toFixed(1) + " %</span>";
+  document.getElementById("result1").textContent =
+    "Probabilité FOUDEK : " + (p * 100).toFixed(1) + " %";
 }
 
 function calculateFull() {
@@ -289,7 +286,7 @@ function calculateFull() {
     p += (comb(I, k) * comb(R, L - k) / total) * ((L - k) / R);
   }
 
-  document.getElementById("result2").innerHTML =
+  document.getElementById("result2").textContent =
     "Probabilité classique : " + (p * 100).toFixed(1) + " %";
 }
 </script>
