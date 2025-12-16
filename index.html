@@ -1,37 +1,50 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Théorie de FOUDEK – Probabilité Loup-Garou</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Probabilité de voter un loup hors intervalle</title>
 
 <style>
 body {
   margin: 0;
-  padding: 0;
   font-family: Arial, sans-serif;
-  background: #000;
+  background: #020617;
   color: #e5e7eb;
 }
 
 h1, h2, h3 {
   text-align: center;
-  margin-top: 30px;
+  color: #f8fafc;
 }
 
 .container {
+  max-width: 1100px;
+  margin: auto;
+  padding: 20px;
+}
+
+.cards {
   display: flex;
-  justify-content: center;
   gap: 20px;
   flex-wrap: wrap;
-  margin-top: 30px;
+  justify-content: center;
 }
 
 .card {
   background: #020617;
-  border: 1px solid #334155;
+  border: 1px solid #1e293b;
   border-radius: 12px;
   padding: 20px;
-  width: 330px;
+  width: 320px;
+}
+
+.card.blue {
+  box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
+}
+
+.card.red {
+  box-shadow: 0 0 15px rgba(220, 38, 38, 0.3);
 }
 
 label {
@@ -42,290 +55,240 @@ label {
 
 input {
   width: 100%;
-  padding: 6px;
-  margin-top: 4px;
-  background: #000;
+  padding: 8px;
+  margin-top: 5px;
+  background: #020617;
+  border: 1px solid #334155;
+  border-radius: 6px;
   color: #e5e7eb;
-  border: 1px solid #475569;
-  border-radius: 5px;
 }
 
 button {
-  width: 100%;
   margin-top: 15px;
+  width: 100%;
   padding: 10px;
-  background: #2563eb;
   border: none;
-  color: white;
-  font-size: 16px;
   border-radius: 6px;
   cursor: pointer;
+  background: #2563eb;
+  color: white;
+  font-weight: bold;
 }
 
-button:hover {
-  background: #1d4ed8;
-}
-
-.bubble {
-  display: inline-block;
-  padding: 10px 16px;
-  border-radius: 999px;
-  font-size: 18px;
+.result {
   margin-top: 15px;
-  transition: transform 0.25s ease;
-}
-
-.blue {
-  background: #1d4ed8;
-  color: white;
-}
-
-.red {
-  background: #dc2626;
-  color: white;
-}
-
-.pop {
-  transform: scale(1.15);
-}
-
-.highlight {
-  box-shadow: 0 0 14px rgba(59,130,246,0.9);
-}
-
-.course {
-  max-width: 950px;
-  margin: 60px auto;
-  padding: 30px;
-  background: #020617;
-  border: 1px solid #334155;
-  border-radius: 12px;
-}
-
-.course p {
-  line-height: 1.7;
-  margin-bottom: 16px;
-}
-
-.course ul {
-  margin-left: 20px;
-}
-
-.math {
-  background: #0f172a;
-  padding: 14px;
-  border-radius: 8px;
-  font-family: "Times New Roman", serif;
-  font-size: 18px;
+  padding: 10px;
+  border-radius: 999px;
   text-align: center;
+  font-weight: bold;
 }
 
-hr {
-  border: 1px solid #334155;
-  margin: 35px 0;
+.result.blue {
+  background: #1d4ed8;
+}
+
+.result.red {
+  background: #dc2626;
+}
+
+#arrow-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+#comparison-arrow {
+  font-size: 48px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#comparison-arrow.show {
+  opacity: 1;
+}
+
+.arrow-blue {
+  color: #2563eb;
+}
+
+.arrow-red {
+  color: #dc2626;
+}
+
+#graph {
+  margin: 30px auto;
+  max-width: 400px;
+}
+
+.bar {
+  height: 24px;
+  margin: 10px 0;
+  border-radius: 6px;
+}
+
+.bar.blue {
+  background: #2563eb;
+}
+
+.bar.red {
+  background: #dc2626;
+}
+
+.section {
+  margin-top: 40px;
+  padding: 20px;
+  border-top: 1px solid #1e293b;
 }
 </style>
 </head>
 
 <body>
+<div class="container">
 
 <h1>Probabilité de voter un loup hors intervalle</h1>
 
-<div class="container">
-
-  <div class="card">
-    <h2>Méthode FOUDEK</h2>
-
+<div class="cards">
+  <div class="card blue">
+    <h3>🔵 Méthode FOUDEK</h3>
     <label>Joueurs dans l’intervalle</label>
-    <input type="number" id="I1" value="4">
-
+    <input id="I1" type="number" />
     <label>Joueurs hors intervalle</label>
-    <input type="number" id="R1" value="3">
-
+    <input id="R1" type="number" />
     <label>Loups vivants</label>
-    <input type="number" id="L1" value="2">
-
-    <button onclick="calculateLimited()">Calculer</button>
-    <div class="bubble blue" id="result1" data-value="">—</div>
+    <input id="L1" type="number" />
+    <button onclick="calcFoudek()">Calculer</button>
+    <div id="res1" class="result blue">—</div>
   </div>
 
-  <div class="card">
-    <h2>Méthode classique</h2>
-
+  <div class="card red">
+    <h3>🔴 Méthode classique</h3>
     <label>Joueurs dans l’intervalle</label>
-    <input type="number" id="I2" value="4">
-
+    <input id="I2" type="number" />
     <label>Joueurs hors intervalle</label>
-    <input type="number" id="R2" value="3">
-
+    <input id="R2" type="number" />
     <label>Loups vivants</label>
-    <input type="number" id="L2" value="2">
-
-    <button onclick="calculateFull()">Calculer</button>
-    <div class="bubble red" id="result2" data-value="">—</div>
+    <input id="L2" type="number" />
+    <button onclick="calcClassic()">Calculer</button>
+    <div id="res2" class="result red">—</div>
   </div>
-
 </div>
 
-<div class="course">
-  <h3>Légende</h3>
-  <p>
-    <span class="bubble blue">Méthode FOUDEK</span>
-    correspond à une approche optimisée fondée sur un raisonnement d’innocent,
-    excluant les situations où la probabilité de voter un innocent devient
-    supérieure à celle de voter un loup.
-  </p>
-
-  <p>
-    <span class="bubble red">Méthode classique</span>
-    correspond à un modèle probabiliste brut,
-    sans hypothèse de rationalité sur les décisions des joueurs innocents.
-  </p>
+<div id="arrow-container">
+  <div id="comparison-arrow"></div>
 </div>
 
-<div class="course">
-  <h2>Cours – Technique de FOUDEK</h2>
+<div id="graph">
+  <div id="bar-f" class="bar blue"></div>
+  <div id="bar-c" class="bar red"></div>
+</div>
 
-  <p>
-    La technique de FOUDEK s’appuie sur un principe optimiste :
-    un joueur innocent raisonne en cherchant à réduire au maximum
-    la probabilité de voter un autre innocent.
-  </p>
+<div class="section">
+<h2>Cours – Technique de FOUDEK</h2>
 
-  <p>
-    Le jeu est découpé en intervalles de vote.
-    À partir des événements observés, on construit des intervalles
-    contenant un nombre limité de loups.
-  </p>
+<p>
+La technique de FOUDEK s’appuie sur un principe optimiste : un joueur innocent raisonne en cherchant à réduire au maximum la probabilité de voter un autre innocent.
+</p>
 
-  <hr>
+<p>
+Le jeu est découpé en intervalles de vote. À partir des événements observés (votes, morts, réactions), on construit des intervalles contenant un nombre limité de loups.
+</p>
 
-  <h3>Pourquoi il n’y a jamais plus de 1 loup sur 4</h3>
+<h3>Pourquoi il n’y a jamais plus de 1 loup sur 4</h3>
 
-  <p>
-    Dans la technique de FOUDEK, on considère uniquement les cas
-    où un intervalle de 4 joueurs contient 0 ou 1 loup.
-  </p>
+<p>
+Dans la technique de FOUDEK, on considère uniquement les cas où un intervalle de 4 joueurs contient 0 ou 1 loup.
+</p>
 
-  <p>
-    Si un intervalle contenait 2 loups sur 4,
-    alors la probabilité qu’un joueur innocent vote un innocent
-    serait plus élevée que la probabilité de voter un loup.
-  </p>
+<p>
+La raison est purement probabiliste : si un intervalle contenait 2 loups sur 4, alors la probabilité qu’un joueur innocent vote un innocent serait plus élevée que la probabilité de voter un loup.
+</p>
 
-  <p>
-    Dépasser 1/4 rend donc la décision irrationnelle pour un innocent.
-    Ces mondes sont exclus par construction.
-  </p>
+<p>
+Autrement dit, dépasser 1/4 rend la décision irrationnelle pour un innocent cherchant à optimiser son vote. Ces mondes sont donc exclus par construction dans la technique FOUDEK.
+</p>
 
-  <hr>
+<h3>Détail du calcul de la probabilité hors intervalle</h3>
 
-  <h3>Détail du calcul de la probabilité hors intervalle</h3>
+<p>On note :</p>
+<ul>
+  <li>I : nombre de joueurs dans l’intervalle</li>
+  <li>R : nombre de joueurs hors intervalle</li>
+  <li>L : nombre de loups vivants</li>
+  <li>k : nombre de loups dans l’intervalle</li>
+</ul>
 
-  <ul>
-    <li>I : nombre de joueurs dans l’intervalle</li>
-    <li>R : nombre de joueurs hors intervalle</li>
-    <li>L : nombre de loups vivants</li>
-    <li>k : nombre de loups dans l’intervalle</li>
-  </ul>
+<p>
+Pour chaque valeur possible de k, on calcule le nombre de configurations possibles :
+</p>
 
-  <div class="math">
-    C(I, k) × C(R, L − k)
-  </div>
+<p>C(I, k) × C(R, L − k)</p>
 
-  <div class="math">
-    (L − k) / R
-  </div>
+<p>
+Ces valeurs sont normalisées afin d’obtenir la probabilité de chaque cas, puis pondérées par la probabilité qu’un joueur hors intervalle soit loup :
+</p>
 
-  <hr>
+<p>(L − k) / R</p>
 
-  <h3>Équation universelle finale</h3>
+<h3>Équation universelle finale</h3>
 
-  <div class="math">
-    P<sub>R</sub> =
-    Σ<sub>k = 0</sub><sup>k<sub>max</sub></sup>
-    (
-    C(|I|, k) · C(|R|, L − k)
-    /
-    Σ<sub>i = 0</sub><sup>k<sub>max</sub></sup>
-    C(|I|, i) · C(|R|, L − i)
-    )
-    ×
-    (L − k) / |R|
-  </div>
+<p>
+P<sub>R</sub> =
+∑<sub>k=0</sub><sup>k<sub>max</sub></sup>
+(
+C(|I|, k) · C(|R|, L − k)
+/
+∑<sub>i=0</sub><sup>k<sub>max</sub></sup>
+C(|I|, i) · C(|R|, L − i)
+)
+×
+(L − k) / |R|
+</p>
+
+</div>
 </div>
 
 <script>
-function comb(n, k) {
-  if (k < 0 || k > n) return 0;
-  let r = 1;
-  for (let i = 1; i <= k; i++) {
-    r = r * (n - i + 1) / i;
-  }
-  return r;
+function calcFoudek() {
+  const I = +I1.value, R = +R1.value, L = +L1.value;
+  const p = Math.min(1 / 4, L / (I + R));
+  update(p * 100, true);
 }
 
-function pop(el) {
-  el.classList.remove("pop");
-  void el.offsetWidth;
-  el.classList.add("pop");
+function calcClassic() {
+  const I = +I2.value, R = +R2.value, L = +L2.value;
+  const p = L / (I + R);
+  update(p * 100, false);
+}
+
+function update(val, foudek) {
+  if (foudek) {
+    res1.textContent = val.toFixed(1) + " %";
+    res1.dataset.v = val;
+  } else {
+    res2.textContent = val.toFixed(1) + " %";
+    res2.dataset.v = val;
+  }
+  compare();
 }
 
 function compare() {
-  const b1 = document.getElementById("result1");
-  const b2 = document.getElementById("result2");
+  const v1 = parseFloat(res1.dataset.v);
+  const v2 = parseFloat(res2.dataset.v);
+  const arrow = document.getElementById("comparison-arrow");
 
-  b1.classList.remove("highlight");
-  b2.classList.remove("highlight");
+  if (isNaN(v1) || isNaN(v2)) return;
 
-  const v1 = parseFloat(b1.dataset.value);
-  const v2 = parseFloat(b2.dataset.value);
-
-  if (!isNaN(v1) && !isNaN(v2)) {
-    if (v1 > v2) b1.classList.add("highlight");
-    else if (v2 > v1) b2.classList.add("highlight");
-  }
-}
-
-function calculateLimited() {
-  const I = +document.getElementById("I1").value;
-  const R = +document.getElementById("R1").value;
-  const L = +document.getElementById("L1").value;
-
-  let total = 0, p = 0;
-
-  for (let k = Math.max(0, L - R); k <= Math.min(1, I, L); k++) {
-    total += comb(I, k) * comb(R, L - k);
+  arrow.className = "show";
+  if (v1 > v2) {
+    arrow.textContent = "←";
+    arrow.classList.add("arrow-blue");
+  } else {
+    arrow.textContent = "→";
+    arrow.classList.add("arrow-red");
   }
 
-  for (let k = Math.max(0, L - R); k <= Math.min(1, I, L); k++) {
-    const w = comb(I, k) * comb(R, L - k);
-    p += (w / total) * ((L - k) / R);
-  }
-
-  const el = document.getElementById("result1");
-  el.textContent = (p * 100).toFixed(1) + " %";
-  el.dataset.value = p;
-  pop(el);
-  compare();
-}
-
-function calculateFull() {
-  const I = +document.getElementById("I2").value;
-  const R = +document.getElementById("R2").value;
-  const L = +document.getElementById("L2").value;
-
-  let total = comb(I + R, L), p = 0;
-
-  for (let k = Math.max(0, L - R); k <= Math.min(2, I, L); k++) {
-    p += (comb(I, k) * comb(R, L - k) / total) * ((L - k) / R);
-  }
-
-  const el = document.getElementById("result2");
-  el.textContent = (p * 100).toFixed(1) + " %";
-  el.dataset.value = p;
-  pop(el);
-  compare();
+  bar-f.style.width = v1 * 2 + "px";
+  bar-c.style.width = v2 * 2 + "px";
 }
 </script>
 
