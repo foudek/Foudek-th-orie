@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Calculateur de probabilité – Loup hors intervalle</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .card {
+      background: #020617;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 20px;
+      width: 340px;
+    }
+    .card h2 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input {
+      width: 100%;
+      padding: 6px;
+      margin-top: 4px;
+      background: #020617;
+      color: #e5e7eb;
+      border: 1px solid #475569;
+      border-radius: 5px;
+    }
+    button {
+      margin-top: 15px;
+      width: 100%;
+      padding: 10px;
+      background: #2563eb;
+      border: none;
+      color: white;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1d4ed8;
+    }
+    .result {
+      margin-top: 15px;
+      font-size: 18px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Probabilité de voter un loup hors intervalle</h1>
+
+<div class="container">
+
+  <!-- MODE A -->
+  <div class="card">
+    <h2>🔵 Mode ≤ 1 loup dans les 4</h2>
+
+    <label>Joueurs dans l’intervalle</label>
+    <input type="number" id="I1" value="4" />
+
+    <label>Joueurs hors intervalle</label>
+    <input type="number" id="R1" value="3" />
+
+    <label>Loups vivants</label>
+    <input type="number" id="L1" value="2" />
+
+    <button onclick="calculateLimited()">Calculer</button>
+
+    <div class="result" id="result1"></div>
+  </div>
+
+  <!-- MODE B -->
+  <div class="card">
+    <h2>🔴 Mode 0/4 – 1/4 – 2/4</h2>
+
+    <label>Joueurs dans l’intervalle</label>
+    <input type="number" id="I2" value="4" />
+
+    <label>Joueurs hors intervalle</label>
+    <input type="number" id="R2" value="3" />
+
+    <label>Loups vivants</label>
+    <input type="number" id="L2" value="2" />
+
+    <button onclick="calculateFull()">Calculer</button>
+
+    <div class="result" id="result2"></div>
+  </div>
+
+</div>
+
+<script>
+  function comb(n, k) {
+    if (k < 0 || k > n) return 0;
+    if (k === 0 || k === n) return 1;
+    let res = 1;
+    for (let i = 1; i <= k; i++) {
+      res = res * (n - i + 1) / i;
+    }
+    return res;
+  }
+
+  // MODE A : 0/4 ou 1/4
+  function calculateLimited() {
+    const I = parseInt(document.getElementById("I1").value);
+    const R = parseInt(document.getElementById("R1").value);
+    const L = parseInt(document.getElementById("L1").value);
+
+    let totalWeight = 0;
+    let probability = 0;
+
+    for (let k = Math.max(0, L - R); k <= Math.min(1, I, L); k++) {
+      const weight = comb(I, k) * comb(R, L - k);
+      totalWeight += weight;
+    }
+
+    if (totalWeight === 0) {
+      document.getElementById("result1").innerText = "Situation impossible";
+      return;
+    }
+
+    for (let k = Math.max(0, L - R); k <= Math.min(1, I, L); k++) {
+      const weight = comb(I, k) * comb(R, L - k);
+      const pCase = weight / totalWeight;
+      const pWolfR = (L - k) / R;
+      probability += pCase * pWolfR;
+    }
+
+    document.getElementById("result1").innerText =
+      "Probabilité : " + (probability * 100).toFixed(1) + " %";
+  }
+
+  // MODE B : 0/4 – 1/4 – 2/4
+  function calculateFull() {
+    const I = parseInt(document.getElementById("I2").value);
+    const R = parseInt(document.getElementById("R2").value);
+    const L = parseInt(document.getElementById("L2").value);
+
+    let totalWeight = 0;
+    let probability = 0;
+
+    for (let k = Math.max(0, L - R); k <= Math.min(2, I, L); k++) {
+      const weight = comb(I, k) * comb(R, L - k);
+      totalWeight += weight;
+    }
+
+    if (totalWeight === 0) {
+      document.getElementById("result2").innerText = "Situation impossible";
+      return;
+    }
+
+    for (let k = Math.max(0, L - R); k <= Math.min(2, I, L); k++) {
+      const weight = comb(I, k) * comb(R, L - k);
+      const pCase = weight / totalWeight;
+      const pWolfR = (L - k) / R;
+      probability += pCase * pWolfR;
+    }
+
+    document.getElementById("result2").innerText =
+      "Probabilité : " + (probability * 100).toFixed(1) + " %";
+  }
+</script>
+
+</body>
+</html>
