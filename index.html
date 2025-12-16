@@ -92,7 +92,7 @@ button:hover {
   color: #60a5fa;
 }
 
-.course p {
+.course p, .course ul, .course li {
   line-height: 1.6;
   margin-bottom: 15px;
 }
@@ -100,6 +100,11 @@ button:hover {
 .blue {
   color: #60a5fa;
   font-weight: bold;
+}
+
+hr {
+  border:1px solid #334155;
+  margin:30px 0;
 }
 </style>
 </head>
@@ -158,32 +163,88 @@ button:hover {
     en utilisant uniquement l’information logique disponible</em>.
   </p>
 
+  <p class="blue">
+    👉 La bulle bleue représente la <strong>probabilité conditionnelle</strong> qu’un joueur hors intervalle soit loup selon la théorie de FOUDEK.
+  </p>
+
+  <hr>
+
+  <h3>❓ Pourquoi l’intervalle contient au maximum 1 loup</h3>
+
   <p>
-    Dans cette approche, on ne considère pas tous les mondes possibles,
-    mais uniquement ceux qui respectent une contrainte clé :
+    Dans une partie, un joueur <strong>innocent</strong> n’a aucun intérêt
+    à voter un autre innocent. La théorie de FOUDEK part donc du principe que :
   </p>
 
   <p class="blue">
-    👉 Il y a au maximum 1 loup dans l’intervalle (cas 0/4 ou 1/4).
+    👉 L’intervalle contient 0 ou 1 loup maximum (0/4 ou 1/4).
   </p>
 
   <p>
-    La <span class="blue">bulle bleue</span> affichée dans le calculateur
-    représente donc la <strong>probabilité conditionnelle</strong>
-    qu’un joueur hors intervalle soit loup,
-    <strong>en tenant compte de la théorie de FOUDEK</strong>.
+    Si l’intervalle contenait 2 loups, la probabilité pour un joueur hors intervalle d’être innocent
+    serait plus faible que l’inverse, rendant la décision de voter hors intervalle moins optimale pour un innocent.
+    On exclut donc ces scénarios.
+  </p>
+
+  <hr>
+
+  <h3>🧮 Détail du calcul pour un loup hors intervalle</h3>
+
+  <p>
+    On note :
+  </p>
+  <ul>
+    <li><strong>I</strong> : nombre de joueurs dans l’intervalle</li>
+    <li><strong>R</strong> : nombre de joueurs hors intervalle</li>
+    <li><strong>L</strong> : nombre de loups vivants</li>
+    <li><strong>k</strong> : nombre de loups dans l’intervalle</li>
+  </ul>
+
+  <p>
+    La probabilité qu’un joueur hors intervalle soit loup se calcule comme suit :
   </p>
 
   <p>
-    Cette probabilité est volontairement plus élevée que dans le modèle classique,
-    car elle exclut les mondes défavorables où 2 loups seraient déjà contenus
-    dans l’intervalle.
+    1️⃣ On énumère tous les cas possibles de k (ici 0 ou 1).<br>
+    2️⃣ Pour chaque k, on calcule le poids combinatoire :
+  </p>
+
+  <p style="font-family:monospace; background:#111; padding:8px; border-radius:6px;">
+    W(k) = C(I, k) × C(R, L-k)
   </p>
 
   <p>
-    🔵 <strong>Bleu = décision optimisée pour un innocent</strong><br>
-    🔴 <strong>Rouge = probabilité brute sans hypothèse</strong>
+    3️⃣ On normalise ces poids pour obtenir les probabilités des cas :
   </p>
+
+  <p style="font-family:monospace; background:#111; padding:8px; border-radius:6px;">
+    P(k) = W(k) / Σ W(i)
+  </p>
+
+  <p>
+    4️⃣ Enfin, on calcule la probabilité conditionnelle qu’un joueur hors intervalle soit loup :
+  </p>
+
+  <p style="font-family:monospace; background:#111; padding:8px; border-radius:6px;">
+    P(loup hors intervalle) = Σ P(k) × ((L - k) / R)
+  </p>
+
+  <hr>
+
+  <h3>📐 Équation universelle finale</h3>
+
+  <p style="font-family:monospace; background:#111; padding:8px; border-radius:6px;">
+    P_R = Σ (k=0 à k_max) [ C(I, k) × C(R, L-k) / Σ (i=0 à k_max) C(I, i) × C(R, L-i) ] × (L - k)/R
+  </p>
+
+  <p>
+    Où :<br>
+    <strong>k_max</strong> = maximum de loups autorisés dans l’intervalle (selon FOUDEK)<br>
+    <strong>I</strong> = joueurs dans l’intervalle<br>
+    <strong>R</strong> = joueurs hors intervalle<br>
+    <strong>L</strong> = loups vivants
+  </p>
+
 </div>
 
 <script>
