@@ -66,13 +66,31 @@ button:hover {
   background: #1d4ed8;
 }
 
-.result {
-  margin-top: 15px;
-  padding: 10px;
-  background: #0f172a;
-  border-radius: 8px;
-  text-align: center;
+.bubble {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 999px;
   font-size: 18px;
+  margin-top: 15px;
+  transition: transform 0.25s ease;
+}
+
+.blue {
+  background: #1d4ed8;
+  color: white;
+}
+
+.red {
+  background: #dc2626;
+  color: white;
+}
+
+.pop {
+  transform: scale(1.15);
+}
+
+.highlight {
+  box-shadow: 0 0 14px rgba(59,130,246,0.9);
 }
 
 .course {
@@ -95,7 +113,7 @@ button:hover {
 
 .math {
   background: #0f172a;
-  padding: 12px;
+  padding: 14px;
   border-radius: 8px;
   font-family: "Times New Roman", serif;
   font-size: 18px;
@@ -116,7 +134,7 @@ hr {
 <div class="container">
 
   <div class="card">
-    <h2>Mode FOUDEK</h2>
+    <h2>Méthode FOUDEK</h2>
 
     <label>Joueurs dans l’intervalle</label>
     <input type="number" id="I1" value="4">
@@ -128,11 +146,11 @@ hr {
     <input type="number" id="L1" value="2">
 
     <button onclick="calculateLimited()">Calculer</button>
-    <div class="result" id="result1">—</div>
+    <div class="bubble blue" id="result1" data-value="">—</div>
   </div>
 
   <div class="card">
-    <h2>Modèle classique</h2>
+    <h2>Méthode classique</h2>
 
     <label>Joueurs dans l’intervalle</label>
     <input type="number" id="I2" value="4">
@@ -144,9 +162,25 @@ hr {
     <input type="number" id="L2" value="2">
 
     <button onclick="calculateFull()">Calculer</button>
-    <div class="result" id="result2">—</div>
+    <div class="bubble red" id="result2" data-value="">—</div>
   </div>
 
+</div>
+
+<div class="course">
+  <h3>Légende</h3>
+  <p>
+    <span class="bubble blue">Méthode FOUDEK</span>
+    correspond à une approche optimisée fondée sur un raisonnement d’innocent,
+    excluant les situations où la probabilité de voter un innocent devient
+    supérieure à celle de voter un loup.
+  </p>
+
+  <p>
+    <span class="bubble red">Méthode classique</span>
+    correspond à un modèle probabiliste brut,
+    sans hypothèse de rationalité sur les décisions des joueurs innocents.
+  </p>
 </div>
 
 <div class="course">
@@ -160,8 +194,8 @@ hr {
 
   <p>
     Le jeu est découpé en intervalles de vote.
-    À partir des événements observés (votes, morts, réactions),
-    on construit des intervalles contenant un nombre limité de loups.
+    À partir des événements observés, on construit des intervalles
+    contenant un nombre limité de loups.
   </p>
 
   <hr>
@@ -174,25 +208,19 @@ hr {
   </p>
 
   <p>
-    La raison est purement probabiliste :
-    si un intervalle contenait 2 loups sur 4,
+    Si un intervalle contenait 2 loups sur 4,
     alors la probabilité qu’un joueur innocent vote un innocent
     serait plus élevée que la probabilité de voter un loup.
   </p>
 
   <p>
-    Autrement dit, dépasser 1/4 rend la décision irrationnelle
-    pour un innocent cherchant à optimiser son vote.
-    Ces mondes sont donc exclus par construction dans la technique FOUDEK.
+    Dépasser 1/4 rend donc la décision irrationnelle pour un innocent.
+    Ces mondes sont exclus par construction.
   </p>
 
   <hr>
 
   <h3>Détail du calcul de la probabilité hors intervalle</h3>
-
-  <p>
-    On note :
-  </p>
 
   <ul>
     <li>I : nombre de joueurs dans l’intervalle</li>
@@ -201,18 +229,9 @@ hr {
     <li>k : nombre de loups dans l’intervalle</li>
   </ul>
 
-  <p>
-    Pour chaque valeur possible de k, on calcule le nombre de configurations possibles :
-  </p>
-
   <div class="math">
     C(I, k) × C(R, L − k)
   </div>
-
-  <p>
-    Ces valeurs sont normalisées afin d’obtenir la probabilité de chaque cas,
-    puis pondérées par la probabilité qu’un joueur hors intervalle soit loup :
-  </p>
 
   <div class="math">
     (L − k) / R
@@ -225,24 +244,15 @@ hr {
   <div class="math">
     P<sub>R</sub> =
     Σ<sub>k = 0</sub><sup>k<sub>max</sub></sup>
-    <span>
-      (
-      <span>
-        C(|I|, k) · C(|R|, L − k)
-      </span>
-      /
-      <span>
-        Σ<sub>i = 0</sub><sup>k<sub>max</sub></sup>
-        C(|I|, i) · C(|R|, L − i)
-      </span>
-      )
-    </span>
+    (
+    C(|I|, k) · C(|R|, L − k)
+    /
+    Σ<sub>i = 0</sub><sup>k<sub>max</sub></sup>
+    C(|I|, i) · C(|R|, L − i)
+    )
     ×
-    <span>
-      (L − k) / |R|
-    </span>
+    (L − k) / |R|
   </div>
-
 </div>
 
 <script>
@@ -253,6 +263,28 @@ function comb(n, k) {
     r = r * (n - i + 1) / i;
   }
   return r;
+}
+
+function pop(el) {
+  el.classList.remove("pop");
+  void el.offsetWidth;
+  el.classList.add("pop");
+}
+
+function compare() {
+  const b1 = document.getElementById("result1");
+  const b2 = document.getElementById("result2");
+
+  b1.classList.remove("highlight");
+  b2.classList.remove("highlight");
+
+  const v1 = parseFloat(b1.dataset.value);
+  const v2 = parseFloat(b2.dataset.value);
+
+  if (!isNaN(v1) && !isNaN(v2)) {
+    if (v1 > v2) b1.classList.add("highlight");
+    else if (v2 > v1) b2.classList.add("highlight");
+  }
 }
 
 function calculateLimited() {
@@ -271,8 +303,11 @@ function calculateLimited() {
     p += (w / total) * ((L - k) / R);
   }
 
-  document.getElementById("result1").textContent =
-    "Probabilité FOUDEK : " + (p * 100).toFixed(1) + " %";
+  const el = document.getElementById("result1");
+  el.textContent = (p * 100).toFixed(1) + " %";
+  el.dataset.value = p;
+  pop(el);
+  compare();
 }
 
 function calculateFull() {
@@ -286,8 +321,11 @@ function calculateFull() {
     p += (comb(I, k) * comb(R, L - k) / total) * ((L - k) / R);
   }
 
-  document.getElementById("result2").textContent =
-    "Probabilité classique : " + (p * 100).toFixed(1) + " %";
+  const el = document.getElementById("result2");
+  el.textContent = (p * 100).toFixed(1) + " %";
+  el.dataset.value = p;
+  pop(el);
+  compare();
 }
 </script>
 
