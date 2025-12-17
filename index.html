@@ -6,7 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-/* === STYLE EXISTANT (INCHANGÉ) === */
 body {
   margin: 0;
   padding: 0;
@@ -28,13 +27,28 @@ h1, h2, h3 {
   font-weight: 700;
 }
 
-h1 { font-size: 30px; margin-bottom: 40px; }
-h2 { font-size: 24px; margin: 50px 0 20px; }
+h1 {
+  font-size: 30px;
+  margin-bottom: 40px;
+}
 
-p { margin: 16px 0; font-size: 16px; }
+h2 {
+  font-size: 24px;
+  margin: 50px 0 20px;
+}
 
-ul { margin: 16px 0 16px 20px; }
-li { margin: 8px 0; }
+p {
+  margin: 16px 0;
+  font-size: 16px;
+}
+
+ul {
+  margin: 16px 0 16px 20px;
+}
+
+li {
+  margin: 8px 0;
+}
 
 .separator {
   height: 1px;
@@ -48,81 +62,55 @@ li { margin: 8px 0; }
   padding: 14px 18px;
   font-family: "JetBrains Mono", Consolas, monospace;
   font-size: 15px;
+  overflow-x: auto;
   margin: 20px 0;
   text-align: center;
 }
 
-/* === NOUVEAU STYLE SIMULATION === */
-
-.board {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+.cards {
+  display: flex;
   gap: 20px;
-  margin: 40px 0;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 40px;
 }
 
-.player {
+.card {
   background: #0e0f14;
   border: 1px solid #2a2c36;
   border-radius: 14px;
-  padding: 14px;
-  text-align: center;
-  position: relative;
-  transition: transform 0.4s, box-shadow 0.4s;
+  padding: 20px;
+  width: 300px;
 }
 
-.player.you {
-  border: 2px solid #22c55e;
+.card.blue {
+  box-shadow: 0 0 18px rgba(37, 99, 235, 0.35);
 }
 
-.player.interval {
-  box-shadow: 0 0 25px rgba(37,99,235,0.5);
-  transform: scale(1.04);
+.card.red {
+  box-shadow: 0 0 18px rgba(220, 38, 38, 0.35);
 }
 
-.name {
-  font-weight: 600;
+label {
+  display: block;
+  margin-top: 12px;
+  font-size: 14px;
 }
 
-.tag {
-  font-size: 12px;
-  opacity: 0.6;
-}
-
-.bubble {
-  margin-top: 10px;
-  padding: 6px;
-  border-radius: 999px;
-  font-size: 13px;
-  opacity: 0;
-  transition: opacity 0.5s, box-shadow 0.5s;
-}
-
-.bubble.blue { background: #1d4ed8; }
-.bubble.red { background: #dc2626; }
-
-.bubble.show {
-  opacity: 1;
-  box-shadow: 0 0 18px rgba(255,255,255,0.25);
-}
-
-.controls {
-  text-align: center;
-  margin-top: 30px;
-}
-
-.controls input {
+input {
+  width: 100%;
+  margin-top: 6px;
   padding: 8px;
-  width: 260px;
   background: #0e0f14;
   border: 1px solid #3a3d4d;
-  color: #e6e7eb;
   border-radius: 6px;
+  color: #e6e7eb;
 }
 
-.controls button {
-  margin-top: 14px;
-  padding: 10px 20px;
+button {
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px;
   border: none;
   border-radius: 6px;
   background: #2563eb;
@@ -131,22 +119,33 @@ li { margin: 8px 0; }
   cursor: pointer;
 }
 
-.best {
-  margin-top: 25px;
-  text-align: center;
+.result {
+  margin-top: 15px;
   padding: 10px;
   border-radius: 999px;
-  background: #1a1c25;
+  text-align: center;
   font-weight: bold;
+  opacity: 0.35;
+  transition: opacity 0.3s, box-shadow 0.3s;
+}
+
+.result.blue {
+  background: #1d4ed8;
+}
+
+.result.red {
+  background: #dc2626;
+}
+
+.result.active {
+  opacity: 1;
+  box-shadow: 0 0 20px rgba(255,255,255,0.25);
 }
 </style>
 </head>
 
 <body>
 <div class="container">
-
-<!-- ================= CONTENU THÉORIQUE INCHANGÉ ================= -->
-<!-- (exactement identique à ta version validée) -->
 
 <h1>FOUDEK – Théorie et probabilité hors intervalle</h1>
 
@@ -158,14 +157,47 @@ intervalle de 4 joueurs contient 0 ou 1 loup.
 </p>
 
 <p>
-La raison est purement probabiliste : la probabilité qu’un innocent vote
-un autre innocent est plus élevée que celle de voter un loup.
+La raison est purement probabiliste : si un intervalle contenait
+2 loups sur 4, alors la probabilité qu’un joueur innocent vote un
+innocent serait plus élevée que la probabilité de voter un loup.
 </p>
 
 <p>
-Ainsi, dépasser 1/4 rend la décision irrationnelle pour un innocent.
-Ces mondes sont exclus par construction.
+Autrement dit, dépasser 1/4 rend la décision irrationnelle pour
+un innocent cherchant à optimiser son vote. Ces mondes sont donc
+exclus par construction dans la technique FOUDEK.
 </p>
+
+<div class="separator"></div>
+
+<h2>Détail du calcul de la probabilité hors intervalle</h2>
+
+<p>On note :</p>
+<ul>
+  <li><strong>I</strong> : nombre de joueurs dans l’intervalle</li>
+  <li><strong>R</strong> : nombre de joueurs hors intervalle</li>
+  <li><strong>L</strong> : nombre de loups vivants</li>
+  <li><strong>k</strong> : nombre de loups dans l’intervalle</li>
+</ul>
+
+<p>
+Pour chaque valeur possible de <strong>k</strong>, on calcule le
+nombre de configurations possibles :
+</p>
+
+<div class="formula">
+C(I, k) × C(R, L − k)
+</div>
+
+<p>
+Ces valeurs sont normalisées afin d’obtenir la probabilité de
+chaque cas, puis pondérées par la probabilité qu’un joueur hors
+intervalle soit loup :
+</p>
+
+<div class="formula">
+(L − k) / R
+</div>
 
 <div class="separator"></div>
 
@@ -173,114 +205,96 @@ Ces mondes sont exclus par construction.
 
 <div class="formula">
 P<sub>R</sub> =
-Σ<sub>k = 0</sub><sup>1</sup>
+Σ<sub>k = 0</sub><sup>k<sub>max</sub></sup>
 (
 C(I, k) · C(R, L − k)
 /
-Σ<sub>i = 0</sub><sup>1</sup>
+Σ<sub>i = 0</sub><sup>k<sub>max</sub></sup>
 C(I, i) · C(R, L − i)
 )
 × (L − k) / R
 </div>
 
-<!-- ================= NOUVELLE SIMULATION ================= -->
-
 <div class="separator"></div>
 
-<h2>Simulation de partie – Loup-Garou</h2>
+<h2>Calcul de probabilité</h2>
 
-<p>
-Vous êtes un joueur innocent (« Vous »).
-Les votes observés permettent de former un intervalle
-et de calculer la probabilité qu’un joueur hors intervalle soit loup
-selon les méthodes FOUDEK et classique.
-</p>
+<div class="cards">
 
-<div class="board" id="board">
-  <div class="player you"><div class="name">Vous</div><div class="tag">Innocent</div></div>
-  <div class="player" data-id="A"><div class="name">Joueur A</div></div>
-  <div class="player" data-id="B"><div class="name">Joueur B</div></div>
-  <div class="player" data-id="C"><div class="name">Joueur C</div></div>
-  <div class="player" data-id="D"><div class="name">Joueur D</div></div>
-  <div class="player" data-id="E"><div class="name">Joueur E</div></div>
-  <div class="player" data-id="F"><div class="name">Joueur F</div></div>
-  <div class="player" data-id="G"><div class="name">Joueur G</div></div>
+<div class="card blue">
+<h3>🔵 Méthode FOUDEK</h3>
+<label>Joueurs dans l’intervalle</label>
+<input id="I1" type="number">
+<label>Joueurs hors intervalle</label>
+<input id="R1" type="number">
+<label>Loups vivants</label>
+<input id="L1" type="number">
+<button onclick="calcFoudek()">Calculer</button>
+<div id="resF" class="result blue">—</div>
 </div>
 
-<div class="controls">
-  <p>Votes observés (ex : A>B,C>B)</p>
-  <input id="votes" placeholder="A>B,C>B">
-  <br>
-  <button onclick="simulate()">Lancer la simulation</button>
+<div class="card red">
+<h3>🔴 Méthode classique</h3>
+<label>Joueurs dans l’intervalle</label>
+<input id="I2" type="number">
+<label>Joueurs hors intervalle</label>
+<input id="R2" type="number">
+<label>Loups vivants</label>
+<input id="L2" type="number">
+<button onclick="calcClassic()">Calculer</button>
+<div id="resC" class="result red">—</div>
 </div>
 
-<div class="best" id="best">—</div>
+</div>
 
 </div>
 
 <script>
-// Combinaisons
+// combinaison C(n,k)
 function C(n, k) {
   if (k < 0 || k > n) return 0;
   let r = 1;
-  for (let i = 1; i <= k; i++) r *= (n - i + 1) / i;
+  for (let i = 1; i <= k; i++) {
+    r *= (n - i + 1) / i;
+  }
   return r;
 }
 
-function simulate() {
-  const votes = document.getElementById("votes").value.split(",");
-  const interval = new Set();
+// TECHNIQUE FOUDEK — fidèle à l’algorithme
+function calcFoudek() {
+  const I = +I1.value;
+  const R = +R1.value;
+  const L = +L1.value;
 
-  document.querySelectorAll(".player").forEach(p => {
-    p.classList.remove("interval");
-    p.querySelectorAll(".bubble").forEach(b => b.remove());
-  });
+  let numerateur = 0;
+  let denominateur = 0;
 
-  votes.forEach(v => {
-    const [a,b] = v.split(">");
-    if (a && b) {
-      interval.add(a.trim());
-      interval.add(b.trim());
-    }
-  });
+  // k ≤ 1 (hypothèse FOUDEK)
+  for (let k = 0; k <= 1; k++) {
+    if (k > L) continue;
+    if (L - k > R) continue;
 
-  interval.forEach(id => {
-    const el = document.querySelector(`.player[data-id="${id}"]`);
-    if (el) el.classList.add("interval");
-  });
-
-  const I = interval.size;
-  const R = 7 - I;
-  const L = 2;
-
-  let num=0, den=0;
-  for (let k=0;k<=1;k++){
-    if (k>L||L-k>R) continue;
-    const c=C(I,k)*C(R,L-k);
-    den+=c;
-    num+=c*((L-k)/R);
+    const configs = C(I, k) * C(R, L - k);
+    denominateur += configs;
+    numerateur += configs * ((L - k) / R);
   }
 
-  const pF = (num/den)*100;
-  const pC = (L/7)*100;
+  const p = (numerateur / denominateur) * 100;
 
-  document.querySelectorAll(".player:not(.interval):not(.you)").forEach(p=>{
-    const b1=document.createElement("div");
-    b1.className="bubble blue show";
-    b1.textContent="FOUDEK : "+pF.toFixed(1)+" %";
+  resF.textContent = p.toFixed(1) + " %";
+  resF.classList.add("active");
+}
 
-    const b2=document.createElement("div");
-    b2.className="bubble red show";
-    b2.textContent="Classique : "+pC.toFixed(1)+" %";
+// MÉTHODE CLASSIQUE — inchangée
+function calcClassic() {
+  const I = +I2.value;
+  const R = +R2.value;
+  const L = +L2.value;
 
-    p.appendChild(b1);
-    p.appendChild(b2);
-  });
+  const p = (L / (I + R)) * 100;
 
-  best.textContent =
-    pF > pC
-    ? "Système le plus rentable : FOUDEK"
-    : "Système le plus rentable : Classique";
+  resC.textContent = p.toFixed(1) + " %";
+  resC.classList.add("active");
 }
 </script>
 
