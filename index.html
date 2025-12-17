@@ -76,11 +76,13 @@ function parseIAInput(text){
 function runIA(){
   const input=document.getElementById("iaInput").value;
   const {players,votes,dead}=parseIAInput(input);
+  const requester = 'utilisateur'; // la personne demandant la proba
+  if(!players.includes(requester)) players.push(requester);
   const alive = players.filter(p=>!dead.has(p));
-  const totalPlayers = alive.length;
-  const L = 2; // exemple, à adapter si on ajoute champ nombre de loups
-
-  // Identifier intervalles
+  const totalPlayers = alive.length - 1; // requester inclus mais exclu du calcul
+  const L = 2; // nombre de loups (modifiable si champ ajouté)
+  
+  // Déterminer intervalles
   const inInterval=new Set();
   votes.forEach(v=>{
     let a=Math.min(players.indexOf(v.from),players.indexOf(v.to));
@@ -89,10 +91,9 @@ function runIA(){
     for(let i=a;i<=b;i++) inInterval.add(alive[i]);
   });
 
-  // Calcul proba
   let results='';
   alive.forEach(p=>{
-    if(inInterval.has(p)) return;
+    if(p===requester || inInterval.has(p)) return;
     const R=totalPlayers-inInterval.size;
     const I=Math.min(4,totalPlayers-R);
     // FOUDEK
@@ -109,8 +110,6 @@ function runIA(){
   document.getElementById("iaResults").innerHTML=results;
 }
 </script>
-
-<!-- === FIN IA TEXTE LIBRE === -->
 
 <h2>Pourquoi il n’y a jamais plus de 1 loup sur 4</h2>
 <p>Dans la technique de FOUDEK, on considère uniquement les cas où un intervalle de 4 joueurs contient 0 ou 1 loup.</p>
