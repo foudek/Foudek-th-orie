@@ -1,1 +1,1 @@
-# Foudek-th-orie
+# Foudek-theorielg
