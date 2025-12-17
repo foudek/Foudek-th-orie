@@ -17,7 +17,7 @@ body {
 }
 
 .container {
-  max-width: 900px;
+  max-width: 1200px;
   margin: auto;
   padding: 40px 20px;
 }
@@ -27,34 +27,14 @@ h1, h2, h3 {
   font-weight: 700;
 }
 
-h1 {
-  font-size: 30px;
-  margin-bottom: 40px;
-}
+h1 { font-size: 30px; margin-bottom: 40px; }
+h2 { font-size: 24px; margin: 50px 0 20px; }
+p { margin: 16px 0; font-size: 16px; }
 
-h2 {
-  font-size: 24px;
-  margin: 50px 0 20px;
-}
+ul { margin: 16px 0 16px 20px; }
+li { margin: 8px 0; }
 
-p {
-  margin: 16px 0;
-  font-size: 16px;
-}
-
-ul {
-  margin: 16px 0 16px 20px;
-}
-
-li {
-  margin: 8px 0;
-}
-
-.separator {
-  height: 1px;
-  background: #2a2c36;
-  margin: 50px 0;
-}
+.separator { height: 1px; background: #2a2c36; margin: 50px 0; }
 
 .formula {
   background: #1a1c25;
@@ -83,19 +63,10 @@ li {
   width: 300px;
 }
 
-.card.blue {
-  box-shadow: 0 0 18px rgba(37, 99, 235, 0.35);
-}
+.card.blue { box-shadow: 0 0 18px rgba(37, 99, 235, 0.35); }
+.card.red { box-shadow: 0 0 18px rgba(220, 38, 38, 0.35); }
 
-.card.red {
-  box-shadow: 0 0 18px rgba(220, 38, 38, 0.35);
-}
-
-label {
-  display: block;
-  margin-top: 12px;
-  font-size: 14px;
-}
+label { display: block; margin-top: 12px; font-size: 14px; }
 
 input, select {
   width: 100%;
@@ -129,26 +100,13 @@ button {
   transition: opacity 0.3s, box-shadow 0.3s;
 }
 
-.result.blue {
-  background: #1d4ed8;
-}
+.result.blue { background: #1d4ed8; }
+.result.red { background: #dc2626; }
+.result.active { opacity: 1; box-shadow: 0 0 20px rgba(255,255,255,0.25); }
 
-.result.red {
-  background: #dc2626;
-}
+.voteInfo { margin-top: 5px; font-size: 13px; color: #9ca3af; }
 
-.result.active {
-  opacity: 1;
-  box-shadow: 0 0 20px rgba(255,255,255,0.25);
-}
-
-.voteInfo {
-  margin-top: 5px;
-  font-size: 13px;
-  color: #9ca3af;
-}
-
-/* === colonne pour joueurs === */
+/* colonne verticale pour joueurs */
 #simZone {
   display: flex;
   flex-direction: column;
@@ -223,7 +181,6 @@ C(I, i) · C(R, L − i)
 <h2>Calcul de probabilité</h2>
 
 <div class="cards">
-
 <div class="card blue">
 <h3>🔵 Méthode FOUDEK</h3>
 <label>Joueurs dans l’intervalle</label>
@@ -247,82 +204,57 @@ C(I, i) · C(R, L − i)
 <button onclick="calcClassic()">Calculer</button>
 <div id="resC" class="result red">—</div>
 </div>
-
 </div>
 
 <div class="separator"></div>
 
 <h2>🎭 Activité – Probabilités FOUDEK et Classique hors intervalle avec "vous"</h2>
 
-<p>
-Indiquez les joueurs vivants, qui est « vous » et jusqu’à 2 votes par tour. Les probabilités sont calculées uniquement pour les joueurs **hors intervalle**, mais **le joueur « vous » est compté dans le total**.
-</p>
-
 <div class="card">
-  <label>Nombre total de joueurs</label>
-  <input id="simN" type="number" value="8" min="6">
-
-  <label>Nombre de loups vivants</label>
-  <input id="simL" type="number" value="2">
-
-  <button onclick="genSim()">Générer les joueurs</button>
+<label>Nombre total de joueurs</label>
+<input id="simN" type="number" value="8" min="6">
+<label>Nombre de loups vivants</label>
+<input id="simL" type="number" value="2">
+<button onclick="genSim()">Générer les joueurs</button>
 </div>
 
 <div id="simZone"></div>
 
 <div class="card" style="margin-top:30px;">
-  <h3>Votes</h3>
-  <label>Vote 1 - Joueur :</label>
-  <select id="vote1voter"></select>
-  <select id="vote1target"></select>
-
-  <label>Vote 2 - Joueur (optionnel) :</label>
-  <select id="vote2voter"><option value="">Aucun</option></select>
-  <select id="vote2target"><option value="">Aucun</option></select>
-
-  <button onclick="runSim()">Appliquer le tour</button>
+<h3>Votes</h3>
+<label>Vote 1 - Joueur :</label>
+<select id="vote1voter"></select>
+<select id="vote1target"></select>
+<label>Vote 2 - Joueur (optionnel) :</label>
+<select id="vote2voter"><option value="">Aucun</option></select>
+<select id="vote2target"><option value="">Aucun</option></select>
 </div>
 
 </div>
 
 <script>
-// combinaison C(n,k)
 function C(n,k){
   if(k<0||k>n) return 0;
-  let r=1;
-  for(let i=1;i<=k;i++) r*=(n-i+1)/i;
+  let r=1; for(let i=1;i<=k;i++) r*=(n-i+1)/i;
   return r;
 }
 
-// FOUDEK classique
 function calcFoudek(){
-  const I=+I1.value;
-  const R=+R1.value;
-  const L=+L1.value;
+  const I=+I1.value; const R=+R1.value; const L=+L1.value;
   let num=0,den=0;
-  for(let k=0;k<=1;k++){
-    if(k>L||L-k>R) continue;
-    const c=C(I,k)*C(R,L-k);
-    den+=c;
-    num+=c*((L-k)/R);
-  }
+  for(let k=0;k<=1;k++){ if(k>L||L-k>R) continue;
+    const c=C(I,k)*C(R,L-k); den+=c; num+=c*((L-k)/R);}
   const p=(num/den)*100;
-  resF.textContent=p.toFixed(1)+" %";
-  resF.classList.add("active");
+  resF.textContent=p.toFixed(1)+" %"; resF.classList.add("active");
 }
 
-// classique
 function calcClassic(){
-  const I=+I2.value;
-  const R=+R2.value;
-  const L=+L2.value;
+  const I=+I2.value; const R=+R2.value; const L=+L2.value;
   const p=(L/(I+R))*100;
-  resC.textContent=p.toFixed(1)+" %";
-  resC.classList.add("active");
+  resC.textContent=p.toFixed(1)+" %"; resC.classList.add("active");
 }
 
-/* === ACTIVITÉ FOUDEK + classique hors intervalle avec "vous" === */
-
+/* === ACTIVITÉ avec actualisation automatique et colonnes === */
 let history=[];
 
 function genSim(){
@@ -330,111 +262,72 @@ function genSim(){
   const n=+simN.value;
   let html="", opts="";
   for(let i=1;i<=n;i++){
-    html+=`
-      <div class="card" id="card${i}">
-        <strong>Joueur ${i}</strong>
-        <label><input type="checkbox" id="d${i}"> Mort</label>
-        <label><input type="radio" name="you" id="y${i}"> Vous</label>
-        <div class="result blue" id="pf${i}">FOUDEK : —</div>
-        <div class="result red" id="pc${i}">Classique : —</div>
-        <div class="voteInfo" id="voteInfo${i}"></div>
-      </div>`;
+    html+=`<div class="card" id="card${i}">
+      <strong>Joueur ${i}</strong>
+      <label><input type="checkbox" id="d${i}" onchange="updateSim()"/> Mort</label>
+      <label><input type="radio" name="you" id="y${i}" onchange="updateSim()"/> Vous</label>
+      <div class="result blue" id="pf${i}">FOUDEK : —</div>
+      <div class="result red" id="pc${i}">Classique : —</div>
+      <div class="voteInfo" id="voteInfo${i}"></div>
+    </div>`;
     opts+=`<option value="${i}">Joueur ${i}</option>`;
   }
-  vote1voter.innerHTML=opts;
-  vote1target.innerHTML=opts;
+  vote1voter.innerHTML=opts; vote1target.innerHTML=opts;
   vote2voter.innerHTML='<option value="">Aucun</option>'+opts;
   vote2target.innerHTML='<option value="">Aucun</option>';
   simZone.innerHTML=html;
+  updateSim();
 }
 
-function runSim(){
+function updateSim(){
   const n=+simN.value;
   const L=+simL.value;
-  const votes=[];
-
-  const v1v=+vote1voter.value, v1t=+vote1target.value;
-  if(v1v && v1t) votes.push({from:v1v,to:v1t});
-  const v2v=vote2voter.value? +vote2voter.value:null;
-  const v2t=vote2target.value? +vote2target.value:null;
-  if(v2v && v2t) votes.push({from:v2v,to:v2t});
-  history.push(votes);
-
-  const alive=[];
-  let youIndex=-1;
+  const alive=[], votes=[], youIndex=[];
   for(let i=1;i<=n;i++){
-    const dead=document.getElementById("d"+i).checked;
-    if(document.getElementById("y"+i).checked) youIndex=i;
-    else if(!dead) alive.push(i);
+    if(document.getElementById("d"+i).checked) continue;
+    if(document.getElementById("y"+i).checked) youIndex.push(i);
+    else alive.push(i);
     document.getElementById("voteInfo"+i).textContent="";
     document.getElementById("pf"+i).textContent="FOUDEK : —";
     document.getElementById("pc"+i).textContent="Classique : —";
   }
+  const v1v=+vote1voter.value,v1t=+vote1target.value;
+  if(v1v&&v1t) votes.push({from:v1v,to:v1t});
+  const v2v=vote2voter.value?vote2voter.value:null;
+  const v2t=vote2target.value?vote2target.value:null;
+  if(v2v&&v2t) votes.push({from:+v2v,to:+v2t});
+  history=[votes];
 
-  // créer intervalles
-  const intervals=[];
-  history.forEach(tour=>{
-    tour.forEach(v=>{
-      if(alive.includes(v.from) && alive.includes(v.to)){
-        let a=Math.min(v.from,v.to), b=Math.max(v.from,v.to);
-        if(b-a+1>4) b=a+3;
-        intervals.push([a,b]);
-      }
-    });
+  const intervals=[], inInterval=new Set();
+  votes.forEach(v=>{
+    let a=Math.min(v.from,v.to),b=Math.max(v.from,v.to);
+    if(b-a+1>4) b=a+3;
+    for(let i=a;i<=b;i++) inInterval.add(i);
   });
 
-  // fusion
-  const merged=[];
-  intervals.sort((a,b)=>a[0]-b[0]);
-  intervals.forEach(intv=>{
-    if(!merged.length) merged.push(intv);
-    else{
-      const last=merged[merged.length-1];
-      if(intv[0]<=last[1]+1) last[1]=Math.max(last[1],intv[1]);
-      else merged.push(intv);
-    }
-  });
-
-  // joueurs dans intervalles
-  const inInterval=new Set();
-  merged.forEach(m=>{
-    for(let i=m[0];i<=m[1];i++) inInterval.add(i);
-  });
-
-  // calcul hors intervalle
-  const totalPlayers=alive.length + (youIndex>0?1:0);
-  const totalOutsideIntervals=totalPlayers - Array.from(inInterval).length - (youIndex>0?1:0);
+  const totalPlayers=alive.length+youIndex.length;
+  const totalOutside=totalPlayers-inInterval.size;
 
   alive.forEach(idx=>{
-    if(idx===youIndex) return;
     if(inInterval.has(idx)) return;
-
-    const R=totalOutsideIntervals;
+    const R=totalOutside;
     const I=Math.min(4,totalPlayers-R);
-    let numF=0, denF=0;
+    let numF=0,denF=0;
     for(let k=0;k<=1;k++){
       if(k>L||L-k>R) continue;
       const c=C(I,k)*C(R,L-k);
-      denF+=c;
-      numF+=c*((L-k)/R);
+      denF+=c; numF+=c*((L-k)/R);
     }
-    const pf=(denF>0)? (numF/denF)*100:0;
-
-    // classique calculé uniquement hors intervalles
+    const pf=(denF>0)? (numF/denF)*100 : 0;
     const pc=(R>0)? (L/R)*100 : 0;
-
     document.getElementById("pf"+idx).textContent="FOUDEK : "+pf.toFixed(1)+" %";
     document.getElementById("pc"+idx).textContent="Classique : "+pc.toFixed(1)+" %";
   });
 
-  // affichage votes
-  history.forEach(tour=>{
-    tour.forEach(v=>{
-      document.getElementById("voteInfo"+v.to).textContent+=`Joueur ${v.from} vote pour lui\n`;
-    });
+  votes.forEach(v=>{
+    document.getElementById("voteInfo"+v.to).textContent=`Joueur ${v.from} vote pour lui`;
   });
 }
 </script>
-
 </body>
 </html>
