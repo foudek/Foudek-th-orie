@@ -149,8 +149,6 @@ button {
 
 <h1>FOUDEK – Théorie et probabilité hors intervalle</h1>
 
-<!-- ====== COURS FOUDEK (NOUVEAU CONTENU) ====== -->
-
 <h2>Pourquoi il n’y a jamais plus de 1 loup sur 4</h2>
 
 <p>
@@ -219,8 +217,6 @@ C(I, i) · C(R, L − i)
 
 <div class="separator"></div>
 
-<!-- ====== CALCULATEURS ====== -->
-
 <h2>Calcul de probabilité</h2>
 
 <div class="cards">
@@ -254,17 +250,42 @@ C(I, i) · C(R, L − i)
 </div>
 
 <script>
+// combinaison C(n,k)
+function C(n, k) {
+  if (k < 0 || k > n) return 0;
+  let r = 1;
+  for (let i = 1; i <= k; i++) {
+    r *= (n - i + 1) / i;
+  }
+  return r;
+}
+
+// TECHNIQUE FOUDEK — fidèle à l’algorithme
 function calcFoudek() {
   const I = +I1.value;
   const R = +R1.value;
   const L = +L1.value;
 
-  const p = Math.min(1/4, L / (I + R)) * 100;
+  let numerateur = 0;
+  let denominateur = 0;
+
+  // k ≤ 1 (hypothèse FOUDEK)
+  for (let k = 0; k <= 1; k++) {
+    if (k > L) continue;
+    if (L - k > R) continue;
+
+    const configs = C(I, k) * C(R, L - k);
+    denominateur += configs;
+    numerateur += configs * ((L - k) / R);
+  }
+
+  const p = (numerateur / denominateur) * 100;
 
   resF.textContent = p.toFixed(1) + " %";
   resF.classList.add("active");
 }
 
+// MÉTHODE CLASSIQUE — inchangée
 function calcClassic() {
   const I = +I2.value;
   const R = +R2.value;
