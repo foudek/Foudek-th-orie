@@ -247,7 +247,7 @@ C(I, i) · C(R, L − i)
 <h2>🎭 Activité – Vote FOUDEK multi-tours avec intervalles dynamiques</h2>
 
 <p>
-Sélectionnez les joueurs vivants, qui est « vous » et indiquez jusqu’à 2 votes par tour. Les probabilités se recalculent dynamiquement à chaque tour en utilisant les votes pour créer les intervalles.
+Sélectionnez les joueurs vivants, qui est « vous » et indiquez jusqu’à 2 votes par tour. Les probabilités se recalculent dynamiquement à chaque tour en utilisant les votes pour créer les intervalles, limités à 4 joueurs comme dans FOUDEK.
 </p>
 
 <div class="card">
@@ -313,7 +313,7 @@ function calcClassic(){
   resC.classList.add("active");
 }
 
-/* === ACTIVITÉ FOUDEK avec intervalles dynamiques === */
+/* === ACTIVITÉ FOUDEK avec intervalles dynamiques et max 4 === */
 
 let history=[];
 
@@ -367,9 +367,12 @@ function runSim(){
   const intervals=[];
   history.forEach(tour=>{
     tour.forEach(v=>{
-      // chaque vote crée un intervalle {voter, target} si vivant et pas vous
       if(alive.includes(v.from) && alive.includes(v.to)){
-        intervals.push([v.from, v.to]);
+        const a=Math.min(v.from,v.to), b=Math.max(v.from,v.to);
+        let size=b-a+1;
+        // limiter intervalle à 4 joueurs max
+        if(size>4) b=a+3;
+        intervals.push([a,b]);
       }
     });
   });
@@ -389,14 +392,12 @@ function runSim(){
   // calcul FOUDEK pour chaque joueur hors vous
   alive.forEach(idx=>{
     let pf=0;
-    // trouver intervalle qui contient idx
     let interval=null;
     merged.forEach(m=>{
       if(idx>=m[0] && idx<=m[1]) interval=m;
     });
     let I=interval? interval[1]-interval[0]+1 : 1;
     let R=alive.length - I;
-    // appliquer formule
     let num=0, den=0;
     for(let k=0;k<=1;k++){
       if(k>L || L-k>R) continue;
