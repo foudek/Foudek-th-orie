@@ -42,18 +42,69 @@ button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px
 <h1>FOUDEK – Théorie et probabilité hors intervalle</h1>
 
 <h2>Pourquoi il n’y a jamais plus de 1 loup sur 4</h2>
-<p>Dans la technique de FOUDEK, on considère uniquement les cas où un intervalle de 4 joueurs contient 0 ou 1 loup.</p>
-<p>La raison est purement probabiliste : si un intervalle contenait 2 loups sur 4, alors la probabilité qu’un joueur innocent vote un innocent serait plus élevée que la probabilité de voter un loup.</p>
-<p>Autrement dit, dépasser 1/4 rend la décision irrationnelle pour un innocent cherchant à optimiser son vote. Ces mondes sont donc exclus par construction dans la technique FOUDEK.</p>
+<p>
+Dans la technique de FOUDEK, on considère uniquement les cas où un
+intervalle de 4 joueurs contient 0 ou 1 loup.
+</p>
 
-<p>La théorie FOUDEK correspond à une situation où un joueur innocent, **inconsciemment**, pense qu’il y a un loup hors de son intervalle immédiat. Cette intuition guide ses votes et influence la formation des intervalles probables.</p>
+<p>
+La raison est purement probabiliste : si un intervalle contenait
+2 loups sur 4, alors la probabilité qu’un joueur innocent vote un
+innocent serait plus élevée que la probabilité de voter un loup.
+</p>
 
-<p>Dans une partie réelle, on peut repérer les indices de 1/4 maximum par différents comportements :</p>
-<p>Une conversation entre deux joueurs peut révéler des indices sur deux potentiels intervalles distincts.</p>
-<p>Les contradictions subtiles dans les débats montrent l’influence limitée des loups et confirment qu’un intervalle de 4 ne peut contenir plus d’un loup.</p>
-<p>Si un intervalle de 4 joueurs contient un loup, les autres innocents vont naturellement voter à la majorité hors du loup, renforçant la validité de l’hypothèse 0 ou 1 loup par intervalle.</p>
-<p>Les triangles de vote fournissent aussi un indicateur clé : par exemple, si joueur A vote joueur C, joueur C vote joueur D, et joueur D vote joueur A, cela forme un cycle. Un tel triangle montre que chaque joueur influence un autre, mais aucun groupe de plus d’un tiers ne peut dominer les votes sans créer de contradiction dans la logique rationnelle des innocents.</p>
-<p>Ces comportements combinés, y compris les triangles et les séparations d’intervalles, permettent d’identifier les intervalles et d’appliquer la probabilité hors intervalle de manière fiable.</p>
+<p>
+Autrement dit, dépasser 1/4 rend la décision irrationnelle pour
+un innocent cherchant à optimiser son vote. Ces mondes sont donc
+exclus par construction dans la technique FOUDEK.
+</p>
+
+<p>
+La théorie FOUDEK correspond à une situation où un joueur innocent,
+souvent de manière inconsciente, pense qu’il existe au moins un loup
+hors de son intervalle immédiat. Cette intuition ne repose pas sur
+un calcul explicite, mais sur la répétition des comportements observés
+en partie réelle.
+</p>
+
+<p>
+Lorsqu’un loup est présent dans un intervalle de 4 joueurs, les
+innocents restants ont naturellement tendance à voter à l’extérieur
+de cet intervalle, car leurs désaccords internes empêchent une
+coordination stable contre un innocent précis.
+</p>
+
+<p>
+À l’inverse, si deux loups étaient présents dans le même intervalle,
+leur capacité de coordination ferait mécaniquement augmenter la
+probabilité qu’un innocent de l’intervalle soit éliminé, ce qui
+contredirait l’objectif rationnel d’un vote optimisé pour un innocent.
+</p>
+
+<p>
+Les conversations entre joueurs permettent souvent de mettre en
+évidence deux intervalles potentiels distincts, sans qu’il soit
+nécessaire de connaître précisément les rôles. Ces séparations
+émergent naturellement du débat et des prises de position.
+</p>
+
+<p>
+Les triangles de vote constituent également un indicateur clé :
+par exemple, si le joueur A vote le joueur C, que le joueur C vote
+le joueur D, et que le joueur D vote le joueur A, un cycle se forme.
+Ce type de configuration montre qu’aucun groupe ne peut dépasser un
+tiers des joueurs sans créer de contradictions dans la logique de vote
+des innocents.
+</p>
+
+<p>
+L’ensemble de ces comportements — votes, discussions, cycles et
+séparations — converge vers une même conclusion : dans un intervalle
+de 4 joueurs, il ne peut rationnellement y avoir plus d’un loup si
+les votes sont effectués par des joueurs cherchant à maximiser leurs
+chances d’éliminer un loup. La répétition de ce schéma au fil de la partie
+renforce la probabilité de voter hors intervalle de manière fiable.
+</p>
 
 <div class="separator"></div>
 
