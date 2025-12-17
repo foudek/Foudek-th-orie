@@ -85,11 +85,14 @@ button {
   opacity: 0.4;
 }
 
-.result.active { opacity: 1; }
+.result.active {
+  opacity: 1;
+}
+
 .result.blue { background: #1d4ed8; }
 .result.red { background: #dc2626; }
 
-/* ===== SIMULATION ===== */
+/* === SIMULATION === */
 
 .board {
   display: grid;
@@ -140,7 +143,7 @@ button {
 
 <h1>FOUDEK – Probabilité hors intervalle</h1>
 
-<!-- ===== TABLEAUX (INCHANGÉS) ===== -->
+<!-- ================= TABLEAUX (INCHANGÉS) ================= -->
 
 <div class="cards">
   <div class="card blue">
@@ -176,13 +179,13 @@ button {
   </div>
 </div>
 
-<!-- ===== SIMULATION ===== -->
+<!-- ================= SIMULATION ================= -->
 
 <div class="separator"></div>
 
 <h2>Simulation de partie</h2>
 
-<div class="board">
+<div class="board" id="board">
   <div class="player you">Vous</div>
   <div class="player" data-id="A">Joueur A</div>
   <div class="player" data-id="B">Joueur B</div>
@@ -205,28 +208,25 @@ button {
 </div>
 
 <script>
-// ===== COMBINAISONS =====
+// ================= CALCULS INCHANGÉS =================
+
 function C(n, k) {
   if (k < 0 || k > n) return 0;
-  var r = 1;
-  for (var i = 1; i <= k; i++) {
-    r = r * (n - i + 1) / i;
-  }
+  let r = 1;
+  for (let i = 1; i <= k; i++) r *= (n - i + 1) / i;
   return r;
 }
 
-// ===== FOUDEK =====
 function calcFoudek() {
-  var I = Number(document.getElementById("I1").value);
-  var R = Number(document.getElementById("R1").value);
-  var L = Number(document.getElementById("L1").value);
+  const I = +document.getElementById("I1").value;
+  const R = +document.getElementById("R1").value;
+  const L = +document.getElementById("L1").value;
 
-  var num = 0;
-  var den = 0;
+  let num = 0, den = 0;
 
-  for (var k = 0; k <= 1; k++) {
+  for (let k = 0; k <= 1; k++) {
     if (k > L || L - k > R) continue;
-    var c = C(I, k) * C(R, L - k);
+    const c = C(I, k) * C(R, L - k);
     den += c;
     num += c * ((L - k) / R);
   }
@@ -236,47 +236,43 @@ function calcFoudek() {
   document.getElementById("resF").classList.add("active");
 }
 
-// ===== CLASSIQUE =====
 function calcClassic() {
-  var I = Number(document.getElementById("I2").value);
-  var R = Number(document.getElementById("R2").value);
-  var L = Number(document.getElementById("L2").value);
+  const I = +document.getElementById("I2").value;
+  const R = +document.getElementById("R2").value;
+  const L = +document.getElementById("L2").value;
 
   document.getElementById("resC").textContent =
     ((L / (I + R)) * 100).toFixed(1) + " %";
   document.getElementById("resC").classList.add("active");
 }
 
-// ===== SIMULATION =====
-function simulate() {
-  var voteInput = document.getElementById("votes").value;
-  var interval = new Set();
+// ================= SIMULATION VISUELLE =================
 
-  var players = document.getElementsByClassName("player");
-  for (var i = 0; i < players.length; i++) {
-    players[i].classList.remove("interval");
-  }
+function simulate() {
+  const voteInput = document.getElementById("votes").value.trim();
+  const interval = new Set();
+
+  document.querySelectorAll(".player").forEach(p =>
+    p.classList.remove("interval")
+  );
 
   if (voteInput !== "") {
-    var votes = voteInput.split(",");
-    for (var j = 0; j < votes.length; j++) {
-      var parts = votes[j].split(">");
+    voteInput.split(",").forEach(v => {
+      const parts = v.split(">");
       if (parts.length === 2) {
         interval.add(parts[0].trim());
         interval.add(parts[1].trim());
       }
-    }
+    });
   }
 
-  interval.forEach(function(id) {
-    var el = document.querySelector('.player[data-id="' + id + '"]');
-    if (el) {
-      el.classList.add("interval");
-    }
+  interval.forEach(id => {
+    const el = document.querySelector('.player[data-id="' + id + '"]');
+    if (el) el.classList.add("interval");
   });
 
   document.getElementById("best").textContent =
-    "Simulation effectuée — utilisez les tableaux ci-dessus pour lire la probabilité";
+    "Analyse effectuée — utilisez les tableaux ci-dessus pour la probabilité";
 }
 </script>
 
