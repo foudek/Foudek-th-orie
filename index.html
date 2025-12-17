@@ -180,20 +180,9 @@ exclus par construction dans la technique FOUDEK.
   <li><strong>k</strong> : nombre de loups dans l’intervalle</li>
 </ul>
 
-<p>
-Pour chaque valeur possible de <strong>k</strong>, on calcule le
-nombre de configurations possibles :
-</p>
-
 <div class="formula">
 C(I, k) × C(R, L − k)
 </div>
-
-<p>
-Ces valeurs sont normalisées afin d’obtenir la probabilité de
-chaque cas, puis pondérées par la probabilité qu’un joueur hors
-intervalle soit loup :
-</p>
 
 <div class="formula">
 (L − k) / R
@@ -205,11 +194,11 @@ intervalle soit loup :
 
 <div class="formula">
 P<sub>R</sub> =
-Σ<sub>k = 0</sub><sup>k<sub>max</sub></sup>
+Σ<sub>k = 0</sub><sup>1</sup>
 (
 C(I, k) · C(R, L − k)
 /
-Σ<sub>i = 0</sub><sup>k<sub>max</sub></sup>
+Σ<sub>i = 0</sub><sup>1</sup>
 C(I, i) · C(R, L − i)
 )
 × (L − k) / R
@@ -247,6 +236,35 @@ C(I, i) · C(R, L − i)
 
 </div>
 
+<div class="separator"></div>
+
+<h2>🎭 Activité – Mise en situation Loup-Garou</h2>
+
+<p>
+Sélectionnez une partie réelle : joueurs vivants, morts, et votre position.
+L’outil compare automatiquement la pertinence de la méthode
+<strong>FOUDEK</strong> face à la méthode <strong>classique</strong>.
+</p>
+
+<div class="card">
+  <label>Nombre total de joueurs</label>
+  <input id="simN" type="number" value="8">
+
+  <label>Nombre de loups vivants</label>
+  <input id="simL" type="number" value="2">
+
+  <button onclick="genSim()">Générer les joueurs</button>
+</div>
+
+<div id="simZone" style="margin-top:30px;"></div>
+
+<div class="card" style="margin-top:30px;">
+  <button onclick="runSim()">Analyser</button>
+  <div id="simResF" class="result blue">FOUDEK : —</div>
+  <div id="simResC" class="result red">Classique : —</div>
+  <div id="simBest" class="result active">—</div>
+</div>
+
 </div>
 
 <script>
@@ -260,41 +278,84 @@ function C(n, k) {
   return r;
 }
 
-// TECHNIQUE FOUDEK — fidèle à l’algorithme
 function calcFoudek() {
   const I = +I1.value;
   const R = +R1.value;
   const L = +L1.value;
 
-  let numerateur = 0;
-  let denominateur = 0;
+  let num = 0;
+  let den = 0;
 
-  // k ≤ 1 (hypothèse FOUDEK)
   for (let k = 0; k <= 1; k++) {
-    if (k > L) continue;
-    if (L - k > R) continue;
-
-    const configs = C(I, k) * C(R, L - k);
-    denominateur += configs;
-    numerateur += configs * ((L - k) / R);
+    if (k > L || L - k > R) continue;
+    const c = C(I, k) * C(R, L - k);
+    den += c;
+    num += c * ((L - k) / R);
   }
 
-  const p = (numerateur / denominateur) * 100;
-
+  const p = (num / den) * 100;
   resF.textContent = p.toFixed(1) + " %";
   resF.classList.add("active");
 }
 
-// MÉTHODE CLASSIQUE — inchangée
 function calcClassic() {
   const I = +I2.value;
   const R = +R2.value;
   const L = +L2.value;
 
   const p = (L / (I + R)) * 100;
-
   resC.textContent = p.toFixed(1) + " %";
   resC.classList.add("active");
+}
+
+/* === ACTIVITÉ === */
+
+function genSim() {
+  const n = +simN.value;
+  let html = "";
+  for (let i = 1; i <= n; i++) {
+    html += `
+      <div class="card">
+        <strong>Joueur ${i}</strong>
+        <label><input type="checkbox" id="d${i}"> Mort</label>
+        <label><input type="radio" name="you" id="y${i}"> Vous</label>
+      </div>`;
+  }
+  simZone.innerHTML = html;
+}
+
+function runSim() {
+  const n = +simN.value;
+  const L = +simL.value;
+
+  let alive = 0;
+  for (let i = 1; i <= n; i++) {
+    if (!document.getElementById("d" + i).checked) alive++;
+  }
+
+  const I = Math.floor(alive / 2);
+  const R = alive - I;
+
+  let num = 0;
+  let den = 0;
+
+  for (let k = 0; k <= 1; k++) {
+    if (k > L || L - k > R) continue;
+    const c = C(I, k) * C(R, L - k);
+    den += c;
+    num += c * ((L - k) / R);
+  }
+
+  const pf = (num / den) * 100;
+  const pc = (L / alive) * 100;
+
+  simResF.textContent = "FOUDEK : " + pf.toFixed(1) + " %";
+  simResC.textContent = "Classique : " + pc.toFixed(1) + " %";
+
+  simBest.textContent =
+    pf < pc
+    ? "FOUDEK est plus précis pour un innocent"
+    : "La méthode classique est moins informative ici";
 }
 </script>
 
