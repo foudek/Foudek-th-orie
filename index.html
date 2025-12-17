@@ -97,7 +97,7 @@ label {
   font-size: 14px;
 }
 
-input {
+input, select {
   width: 100%;
   margin-top: 6px;
   padding: 8px;
@@ -238,12 +238,11 @@ C(I, i) · C(R, L − i)
 
 <div class="separator"></div>
 
-<h2>🎭 Activité – Vote FOUDEK (intervalle de 4)</h2>
+<h2>🎭 Activité – Vote FOUDEK avec 2 votes</h2>
 
 <p>
-Application fidèle de la technique FOUDEK.<br>
-Intervalle fixé à <strong>4 joueurs</strong> →  
-probabilité hors intervalle = <strong>40 %</strong>.
+Sélectionnez les joueurs vivants, qui est « vous » et indiquez 2 votes dans la partie.
+Les probabilités FOUDEK et classique sont calculées pour chaque joueur hors intervalle.
 </p>
 
 <div class="card">
@@ -259,13 +258,16 @@ probabilité hors intervalle = <strong>40 %</strong>.
 <div id="simZone" style="margin-top:30px;"></div>
 
 <div class="card" style="margin-top:30px;">
-  <label>Qui vote ?</label>
-  <select id="voter"></select>
+  <h3>Votes</h3>
+  <label>Vote 1 - Joueur :</label>
+  <select id="vote1voter"></select>
+  <select id="vote1target"></select>
 
-  <label>Vote pour</label>
-  <select id="target"></select>
+  <label>Vote 2 - Joueur :</label>
+  <select id="vote2voter"></select>
+  <select id="vote2target"></select>
 
-  <button onclick="runSim()">Appliquer le vote</button>
+  <button onclick="runSim()">Appliquer les votes</button>
 </div>
 
 </div>
@@ -281,6 +283,7 @@ function C(n, k) {
   return r;
 }
 
+// TECHNIQUE FOUDEK
 function calcFoudek() {
   const I = +I1.value;
   const R = +R1.value;
@@ -301,6 +304,7 @@ function calcFoudek() {
   resF.classList.add("active");
 }
 
+// CLASSIQUE
 function calcClassic() {
   const I = +I2.value;
   const R = +R2.value;
@@ -311,43 +315,54 @@ function calcClassic() {
   resC.classList.add("active");
 }
 
-/* === ACTIVITÉ MODIFIÉE UNIQUEMENT === */
+/* === ACTIVITÉ 2 VOTES === */
 
 function genSim() {
   const n = +simN.value;
   let html = "";
   let opts = "";
-
   for (let i = 1; i <= n; i++) {
     html += `
       <div class="card">
         <strong>Joueur ${i}</strong>
+        <label><input type="checkbox" id="d${i}"> Mort</label>
+        <label><input type="radio" name="you" id="y${i}"> Vous</label>
         <div class="result blue" id="pf${i}">FOUDEK : —</div>
         <div class="result red" id="pc${i}">Classique : —</div>
       </div>
     `;
     opts += `<option value="${i}">Joueur ${i}</option>`;
   }
-
+  vote1voter.innerHTML = opts;
+  vote1target.innerHTML = opts;
+  vote2voter.innerHTML = opts;
+  vote2target.innerHTML = opts;
   simZone.innerHTML = html;
-  voter.innerHTML = opts;
-  target.innerHTML = opts;
 }
 
 function runSim() {
   const n = +simN.value;
   const L = +simL.value;
-
   const I = 4;
-  const pf = 0.40;
-  const pc = L / n;
+  const R = n - I;
+
+  const pf = 0.40;   // FOUDEK
+  const pc = L / n;  // classique
 
   for (let i = I + 1; i <= n; i++) {
     document.getElementById("pf" + i).textContent =
-      "FOUDEK : " + (pf * 100).toFixed(0) + " %";
+      "FOUDEK : " + (pf*100).toFixed(0) + " %";
     document.getElementById("pc" + i).textContent =
-      "Classique : " + (pc * 100).toFixed(0) + " %";
+      "Classique : " + (pc*100).toFixed(0) + " %";
   }
+
+  // Affichage votes
+  const v1 = vote1voter.value;
+  const t1 = vote1target.value;
+  const v2 = vote2voter.value;
+  const t2 = vote2target.value;
+  console.log(`Vote 1: Joueur ${v1} vote Joueur ${t1}`);
+  console.log(`Vote 2: Joueur ${v2} vote Joueur ${t2}`);
 }
 </script>
 
