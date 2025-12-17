@@ -46,6 +46,16 @@ button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px
 <p>La raison est purement probabiliste : si un intervalle contenait 2 loups sur 4, alors la probabilité qu’un joueur innocent vote un innocent serait plus élevée que la probabilité de voter un loup.</p>
 <p>Autrement dit, dépasser 1/4 rend la décision irrationnelle pour un innocent cherchant à optimiser son vote. Ces mondes sont donc exclus par construction dans la technique FOUDEK.</p>
 
+<p>Dans une partie réelle, on peut repérer les indices de 1/4 maximum par différents comportements :</p>
+<ul>
+<li>Si deux joueurs discutent longuement ensemble, mais que leurs votes se séparent pour cibler des joueurs distincts, cela indique qu’il est peu probable qu’ils soient tous deux loups.</li>
+<li>Lorsqu’un vote sépare clairement deux joueurs (par exemple joueur A vote joueur C et joueur B vote joueur D), on peut considérer que ces joueurs appartiennent à des intervalles distincts.</li>
+<li>Les conversations et les débats peuvent révéler des contradictions subtiles, mais jamais plus d’un loup sur quatre ne peut être identifié comme influence majeure sur le vote rationnel d’un innocent.</li>
+<li>Si un intervalle de 4 joueurs contient un loup, les autres innocents vont naturellement voter à la majorité hors du loup, renforçant la validité de l’hypothèse 0 ou 1 loup par intervalle.</li>
+<li>Les triangles de vote fournissent aussi un indicateur clé : par exemple, si joueur A vote joueur C, joueur C vote joueur D, et joueur D vote joueur A, cela forme un cycle. Un tel triangle montre que chaque joueur influence un autre, mais aucun groupe de plus d’un tiers ne peut dominer les votes sans créer de contradiction dans la logique rationnelle des innocents.</li>
+<li>Ces comportements combinés, y compris les triangles et les séparations d’intervalles, permettent d’identifier les intervalles et d’appliquer la probabilité hors intervalle de manière fiable.</li>
+</ul>
+
 <div class="separator"></div>
 
 <h2>Détail du calcul de la probabilité hors intervalle</h2>
