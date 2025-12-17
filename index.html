@@ -106,10 +106,10 @@ C(I, i) · C(R, L − i)
 
 <div class="separator"></div>
 
-<h2>🎭 Activité – Probabilités hors intervalle avec "vous"</h2>
+<h2>🎭 Activité – Probabilités hors intervalle</h2>
 <div class="card">
 <label>Nombre total de joueurs</label>
-<input id="simN" type="number" value="8" min="6">
+<input id="simN" type="number" value="7" min="6">
 <label>Nombre de loups vivants</label>
 <input id="simL" type="number" value="2">
 <button onclick="genSim()">Générer les joueurs</button>
@@ -150,14 +150,12 @@ function calcClassic(){
 
 /* === ACTIVITÉ === */
 function genSim(){
-  const n=+simN.value;
-  const L=+simL.value;
+  const n=+simN.value,L=+simL.value;
   let html="", opts="";
   for(let i=1;i<=n;i++){
     html+=`<div class="card" id="card${i}" style="width:120px">
       <strong>Joueur ${i}</strong>
       <label><input type="checkbox" id="d${i}" onchange="updateSim()"/> Mort</label>
-      <label><input type="radio" name="you" id="y${i}" onchange="updateSim()"/> Vous</label>
       <div class="result blue" id="pf${i}">FOUDEK : —</div>
       <div class="result red" id="pc${i}">Classique : —</div>
       <div class="voteInfo" id="voteInfo${i}"></div>
@@ -172,11 +170,9 @@ function genSim(){
 
 function updateSim(){
   const n=+simN.value,L=+simL.value;
-  const alive=[], youIndex=[];
+  const alive=[];
   for(let i=1;i<=n;i++){
-    if(document.getElementById("d"+i).checked) continue;
-    if(document.getElementById("y"+i).checked) youIndex.push(i);
-    else alive.push(i);
+    if(!document.getElementById("d"+i).checked) alive.push(i);
     document.getElementById("voteInfo"+i).textContent="";
     document.getElementById("pf"+i).textContent="FOUDEK : —";
     document.getElementById("pc"+i).textContent="Classique : —";
@@ -195,10 +191,10 @@ function updateSim(){
     for(let i=a;i<=b;i++) inInterval.add(i);
   });
 
-  const totalPlayers=alive.length+youIndex.length;
+  const totalPlayers=alive.length;
   const totalOutside=totalPlayers-inInterval.size;
 
-  alive.concat(youIndex).forEach(idx=>{
+  alive.forEach(idx=>{
     if(inInterval.has(idx)) return;
     const R=totalOutside;
     const I=Math.min(4,totalPlayers-R);
