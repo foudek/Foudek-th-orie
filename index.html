@@ -180,20 +180,9 @@ exclus par construction dans la technique FOUDEK.
   <li><strong>k</strong> : nombre de loups dans l’intervalle</li>
 </ul>
 
-<p>
-Pour chaque valeur possible de <strong>k</strong>, on calcule le
-nombre de configurations possibles :
-</p>
-
 <div class="formula">
 C(I, k) × C(R, L − k)
 </div>
-
-<p>
-Ces valeurs sont normalisées afin d’obtenir la probabilité de
-chaque cas, puis pondérées par la probabilité qu’un joueur hors
-intervalle soit loup :
-</p>
 
 <div class="formula">
 (L − k) / R
@@ -205,11 +194,11 @@ intervalle soit loup :
 
 <div class="formula">
 P<sub>R</sub> =
-Σ<sub>k = 0</sub><sup>k<sub>max</sub></sup>
+Σ<sub>k = 0</sub><sup>1</sup>
 (
 C(I, k) · C(R, L − k)
 /
-Σ<sub>i = 0</sub><sup>k<sub>max</sub></sup>
+Σ<sub>i = 0</sub><sup>1</sup>
 C(I, i) · C(R, L − i)
 )
 × (L − k) / R
@@ -247,54 +236,117 @@ C(I, i) · C(R, L − i)
 
 </div>
 
+<!-- ================= ACTIVITÉ INTERACTIVE ================= -->
+
+<div class="separator"></div>
+
+<h2>Activité interactive – Comparaison FOUDEK / Classique</h2>
+
+<p>
+Cette activité simule des votes et compare la probabilité qu’un joueur
+hors intervalle soit loup selon les deux systèmes.
+</p>
+
+<div class="cards">
+
+<div class="card blue">
+<label>Nombre total de joueurs</label>
+<input id="Tsim" type="number" value="8">
+
+<label>Nombre de loups</label>
+<input id="Lsim" type="number" value="2">
+
+<label>Votes (ex : A>B,C>B)</label>
+<input id="Vsim" type="text" placeholder="A>B,C>B">
+
+<button onclick="runSimulation()">Simuler</button>
+</div>
+
+<div class="card red">
+<div id="simF" class="result blue">FOUDEK : —</div>
+<div id="simC" class="result red">Classique : —</div>
+
+<div id="best"
+     class="result active"
+     style="background:#1a1c25;margin-top:20px;">
+—
+</div>
+</div>
+
+</div>
+
 </div>
 
 <script>
-// combinaison C(n,k)
+// Combinaisons
 function C(n, k) {
   if (k < 0 || k > n) return 0;
   let r = 1;
-  for (let i = 1; i <= k; i++) {
-    r *= (n - i + 1) / i;
-  }
+  for (let i = 1; i <= k; i++) r *= (n - i + 1) / i;
   return r;
 }
 
-// TECHNIQUE FOUDEK — fidèle à l’algorithme
+// FOUDEK (inchangé)
 function calcFoudek() {
-  const I = +I1.value;
-  const R = +R1.value;
-  const L = +L1.value;
+  const I = +I1.value, R = +R1.value, L = +L1.value;
+  let num = 0, den = 0;
 
-  let numerateur = 0;
-  let denominateur = 0;
-
-  // k ≤ 1 (hypothèse FOUDEK)
   for (let k = 0; k <= 1; k++) {
-    if (k > L) continue;
-    if (L - k > R) continue;
-
-    const configs = C(I, k) * C(R, L - k);
-    denominateur += configs;
-    numerateur += configs * ((L - k) / R);
+    if (k > L || L - k > R) continue;
+    const c = C(I, k) * C(R, L - k);
+    den += c;
+    num += c * ((L - k) / R);
   }
 
-  const p = (numerateur / denominateur) * 100;
-
-  resF.textContent = p.toFixed(1) + " %";
+  resF.textContent = ((num / den) * 100).toFixed(1) + " %";
   resF.classList.add("active");
 }
 
-// MÉTHODE CLASSIQUE — inchangée
+// Classique (inchangé)
 function calcClassic() {
-  const I = +I2.value;
-  const R = +R2.value;
-  const L = +L2.value;
-
-  const p = (L / (I + R)) * 100;
-
-  resC.textContent = p.toFixed(1) + " %";
+  const I = +I2.value, R = +R2.value, L = +L2.value;
+  resC.textContent = ((L / (I + R)) * 100).toFixed(1) + " %";
   resC.classList.add("active");
+}
+
+// ACTIVITÉ INTERACTIVE
+function runSimulation() {
+  const T = +Tsim.value;
+  const L = +Lsim.value;
+  const votes = Vsim.value.split(",");
+
+  const interval = new Set();
+  votes.forEach(v => {
+    const [a, b] = v.split(">");
+    if (a && b) {
+      interval.add(a.trim());
+      interval.add(b.trim());
+    }
+  });
+
+  const I = interval.size;
+  const R = T - I;
+
+  // FOUDEK
+  let num = 0, den = 0;
+  for (let k = 0; k <= 1; k++) {
+    if (k > L || L - k > R) continue;
+    const c = C(I, k) * C(R, L - k);
+    den += c;
+    num += c * ((L - k) / R);
+  }
+  const pF = (num / den) * 100;
+
+  // Classique
+  const pC = (L / T) * 100;
+
+  simF.textContent = "FOUDEK : " + pF.toFixed(1) + " %";
+  simC.textContent = "Classique : " + pC.toFixed(1) + " %";
+
+  best.textContent =
+    pF > pC
+    ? "Système le plus rentable : FOUDEK"
+    : "Système le plus rentable : Classique";
 }
 </script>
 
