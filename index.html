@@ -120,7 +120,7 @@ button {
 }
 
 .result {
-  margin-top: 15px;
+  margin-top: 10px;
   padding: 10px;
   border-radius: 999px;
   text-align: center;
@@ -140,6 +140,12 @@ button {
 .result.active {
   opacity: 1;
   box-shadow: 0 0 20px rgba(255,255,255,0.25);
+}
+
+.voteInfo {
+  margin-top: 5px;
+  font-size: 13px;
+  color: #9ca3af;
 }
 </style>
 </head>
@@ -238,11 +244,10 @@ C(I, i) · C(R, L − i)
 
 <div class="separator"></div>
 
-<h2>🎭 Activité – Vote FOUDEK avec 2 votes et morts</h2>
+<h2>🎭 Activité – Vote FOUDEK multi-tours avec votes et morts</h2>
 
 <p>
-Sélectionnez les joueurs vivants, qui est « vous » et indiquez 2 votes dans la partie.
-L’algorithme calcule maintenant correctement la probabilité selon l’équation universelle, en excluant le joueur « vous » et les joueurs morts.
+Sélectionnez les joueurs vivants, qui est « vous » et indiquez jusqu’à 2 votes par tour. Les probabilités se recalculent à chaque tour selon l’évolution de la partie.
 </p>
 
 <div class="card">
@@ -263,11 +268,11 @@ L’algorithme calcule maintenant correctement la probabilité selon l’équati
   <select id="vote1voter"></select>
   <select id="vote1target"></select>
 
-  <label>Vote 2 - Joueur :</label>
-  <select id="vote2voter"></select>
-  <select id="vote2target"></select>
+  <label>Vote 2 - Joueur (optionnel) :</label>
+  <select id="vote2voter"><option value="">Aucun</option></select>
+  <select id="vote2target"><option value="">Aucun</option></select>
 
-  <button onclick="runSim()">Appliquer les votes</button>
+  <button onclick="runSim()">Appliquer le tour</button>
 </div>
 
 </div>
@@ -308,32 +313,45 @@ function calcClassic(){
   resC.classList.add("active");
 }
 
-/* === ACTIVITÉ FOUDEK 2 VOTES avec morts et exclusion de “vous” === */
+/* === ACTIVITÉ FOUDEK multi-tours === */
+
+let history=[]; // historique des tours
 
 function genSim(){
+  history=[];
   const n=+simN.value;
   let html="", opts="";
   for(let i=1;i<=n;i++){
     html+=`
-      <div class="card">
+      <div class="card" id="card${i}">
         <strong>Joueur ${i}</strong>
         <label><input type="checkbox" id="d${i}"> Mort</label>
         <label><input type="radio" name="you" id="y${i}"> Vous</label>
         <div class="result blue" id="pf${i}">FOUDEK : —</div>
         <div class="result red" id="pc${i}">Classique : —</div>
+        <div class="voteInfo" id="voteInfo${i}"></div>
       </div>`;
     opts+=`<option value="${i}">Joueur ${i}</option>`;
   }
   vote1voter.innerHTML=opts;
   vote1target.innerHTML=opts;
-  vote2voter.innerHTML=opts;
-  vote2target.innerHTML=opts;
+  vote2voter.innerHTML='<option value="">Aucun</option>'+opts;
+  vote2target.innerHTML='<option value="">Aucun</option>'+opts;
   simZone.innerHTML=html;
 }
 
 function runSim(){
   const n=+simN.value;
   const L=+simL.value;
+  const votes=[];
+
+  // récupérer votes
+  const v1v=+vote1voter.value, v1t=+vote1target.value;
+  if(v1v && v1t) votes.push({from:v1v,to:v1t});
+  const v2v=vote2voter.value? +vote2voter.value:null;
+  const v2t=vote2target.value? +vote2target.value:null;
+  if(v2v && v2t) votes.push({from:v2v,to:v2t});
+  history.push(votes);
 
   // joueurs vivants hors "vous"
   const alive=[];
@@ -342,9 +360,10 @@ function runSim(){
     const dead=document.getElementById("d"+i).checked;
     if(document.getElementById("y"+i).checked) youIndex=i;
     else if(!dead) alive.push(i);
+    document.getElementById("voteInfo"+i).textContent="";
   }
 
-  const I=Math.min(4,alive.length); // intervalle
+  const I=Math.min(4,alive.length); 
   const R=alive.length-I;
 
   let num=0, den=0;
@@ -357,18 +376,19 @@ function runSim(){
   const pf=(num/den)*100;
   const pc=(L/alive.length)*100;
 
-  // Affichage
+  // affichage proba
   alive.forEach((idx,i)=>{
-    if(i<I) return; // joueurs dans intervalle
+    if(i<I) return;
     document.getElementById("pf"+idx).textContent="FOUDEK : "+pf.toFixed(1)+" %";
     document.getElementById("pc"+idx).textContent="Classique : "+pc.toFixed(1)+" %";
   });
 
-  // Affichage votes
-  const v1=+vote1voter.value,t1=+vote1target.value;
-  const v2=+vote2voter.value,t2=+vote2target.value;
-  console.log(`Vote 1: Joueur ${v1} -> Joueur ${t1}`);
-  console.log(`Vote 2: Joueur ${v2} -> Joueur ${t2}`);
+  // affichage votes sous chaque joueur
+  history.forEach(tour=>{
+    tour.forEach(v=>{
+      document.getElementById("voteInfo"+v.to).textContent+=`Joueur ${v.from} vote pour lui\n`;
+    });
+  });
 }
 </script>
 
