@@ -147,6 +147,14 @@ button {
   font-size: 13px;
   color: #9ca3af;
 }
+
+/* === colonne pour joueurs === */
+#simZone {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
 </style>
 </head>
 
@@ -244,10 +252,10 @@ C(I, i) · C(R, L − i)
 
 <div class="separator"></div>
 
-<h2>🎭 Activité – Probabilités FOUDEK hors intervalle avec "vous"</h2>
+<h2>🎭 Activité – Probabilités FOUDEK et Classique hors intervalle avec "vous"</h2>
 
 <p>
-Indiquez les joueurs vivants, qui est « vous » et jusqu’à 2 votes par tour. Les probabilités sont calculées uniquement pour les joueurs **hors intervalle**, mais **le joueur « vous » est compté dans le total pour FOUDEK et classique**.
+Indiquez les joueurs vivants, qui est « vous » et jusqu’à 2 votes par tour. Les probabilités sont calculées uniquement pour les joueurs **hors intervalle**, mais **le joueur « vous » est compté dans le total**.
 </p>
 
 <div class="card">
@@ -260,7 +268,7 @@ Indiquez les joueurs vivants, qui est « vous » et jusqu’à 2 votes par t
   <button onclick="genSim()">Générer les joueurs</button>
 </div>
 
-<div id="simZone" style="margin-top:30px;"></div>
+<div id="simZone"></div>
 
 <div class="card" style="margin-top:30px;">
   <h3>Votes</h3>
@@ -313,7 +321,7 @@ function calcClassic(){
   resC.classList.add("active");
 }
 
-/* === ACTIVITÉ FOUDEK hors intervalle avec "vous" === */
+/* === ACTIVITÉ FOUDEK + classique hors intervalle avec "vous" === */
 
 let history=[];
 
@@ -336,7 +344,7 @@ function genSim(){
   vote1voter.innerHTML=opts;
   vote1target.innerHTML=opts;
   vote2voter.innerHTML='<option value="">Aucun</option>'+opts;
-  vote2target.innerHTML='<option value="">Aucun</option>'+opts;
+  vote2target.innerHTML='<option value="">Aucun</option>';
   simZone.innerHTML=html;
 }
 
@@ -369,7 +377,7 @@ function runSim(){
     tour.forEach(v=>{
       if(alive.includes(v.from) && alive.includes(v.to)){
         let a=Math.min(v.from,v.to), b=Math.max(v.from,v.to);
-        if(b-a+1>4) b=a+3; // limite FOUDEK
+        if(b-a+1>4) b=a+3;
         intervals.push([a,b]);
       }
     });
@@ -394,7 +402,7 @@ function runSim(){
   });
 
   // calcul hors intervalle
-  const totalPlayers=alive.length + (youIndex>0?1:0); // inclure "vous"
+  const totalPlayers=alive.length + (youIndex>0?1:0);
   const totalOutsideIntervals=totalPlayers - Array.from(inInterval).length - (youIndex>0?1:0);
 
   alive.forEach(idx=>{
@@ -402,16 +410,19 @@ function runSim(){
     if(inInterval.has(idx)) return;
 
     const R=totalOutsideIntervals;
-    const I=Math.min(4,totalPlayers-R); // intervalle hypothétique
-    let num=0, den=0;
+    const I=Math.min(4,totalPlayers-R);
+    let numF=0, denF=0;
     for(let k=0;k<=1;k++){
       if(k>L||L-k>R) continue;
       const c=C(I,k)*C(R,L-k);
-      den+=c;
-      num+=c*((L-k)/R);
+      denF+=c;
+      numF+=c*((L-k)/R);
     }
-    const pf=(den>0)? (num/den)*100:0;
-    const pc=(totalPlayers>0)? (L/totalPlayers)*100:0;
+    const pf=(denF>0)? (numF/denF)*100:0;
+
+    // classique calculé uniquement hors intervalles
+    const pc=(R>0)? (L/R)*100 : 0;
+
     document.getElementById("pf"+idx).textContent="FOUDEK : "+pf.toFixed(1)+" %";
     document.getElementById("pc"+idx).textContent="Classique : "+pc.toFixed(1)+" %";
   });
