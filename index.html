@@ -242,7 +242,7 @@ C(I, i) · C(R, L − i)
 
 <p>
 Sélectionnez les joueurs vivants, qui est « vous » et indiquez 2 votes dans la partie.
-L’algorithme calcule maintenant correctement la probabilité selon l’équation universelle, en prenant en compte les joueurs morts et votre position.
+L’algorithme calcule maintenant correctement la probabilité selon l’équation universelle, en excluant le joueur « vous » et les joueurs morts.
 </p>
 
 <div class="card">
@@ -308,7 +308,7 @@ function calcClassic(){
   resC.classList.add("active");
 }
 
-/* === ACTIVITÉ FOUDEK 2 VOTES avec mort et vous === */
+/* === ACTIVITÉ FOUDEK 2 VOTES avec morts et exclusion de “vous” === */
 
 function genSim(){
   const n=+simN.value;
@@ -334,18 +334,20 @@ function genSim(){
 function runSim(){
   const n=+simN.value;
   const L=+simL.value;
+
+  // joueurs vivants hors "vous"
   const alive=[];
   let youIndex=-1;
   for(let i=1;i<=n;i++){
     const dead=document.getElementById("d"+i).checked;
-    if(!dead) alive.push(i);
     if(document.getElementById("y"+i).checked) youIndex=i;
+    else if(!dead) alive.push(i);
   }
 
   const I=Math.min(4,alive.length); // intervalle
   const R=alive.length-I;
 
-  let num=0,den=0;
+  let num=0, den=0;
   for(let k=0;k<=1;k++){
     if(k>L || L-k>R) continue;
     const c=C(I,k)*C(R,L-k);
