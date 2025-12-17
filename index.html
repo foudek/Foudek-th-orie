@@ -238,16 +238,16 @@ C(I, i) · C(R, L − i)
 
 <div class="separator"></div>
 
-<h2>🎭 Activité – Mise en situation Loup-Garou</h2>
+<h2>🎭 Activité – Vote FOUDEK (intervalle de 4)</h2>
 
 <p>
-Sélectionnez une partie réelle : joueurs vivants, morts, et votre position.
-L’outil compare automatiquement la pertinence de la méthode
-<strong>FOUDEK</strong> face à la méthode <strong>classique</strong>.
+Application fidèle de la technique FOUDEK.<br>
+Intervalle fixé à <strong>4 joueurs</strong> →  
+probabilité hors intervalle = <strong>40 %</strong>.
 </p>
 
 <div class="card">
-  <label>Nombre total de joueurs</label>
+  <label>Nombre total de joueurs vivants</label>
   <input id="simN" type="number" value="8">
 
   <label>Nombre de loups vivants</label>
@@ -259,10 +259,13 @@ L’outil compare automatiquement la pertinence de la méthode
 <div id="simZone" style="margin-top:30px;"></div>
 
 <div class="card" style="margin-top:30px;">
-  <button onclick="runSim()">Analyser</button>
-  <div id="simResF" class="result blue">FOUDEK : —</div>
-  <div id="simResC" class="result red">Classique : —</div>
-  <div id="simBest" class="result active">—</div>
+  <label>Qui vote ?</label>
+  <select id="voter"></select>
+
+  <label>Vote pour</label>
+  <select id="target"></select>
+
+  <button onclick="runSim()">Appliquer le vote</button>
 </div>
 
 </div>
@@ -308,54 +311,43 @@ function calcClassic() {
   resC.classList.add("active");
 }
 
-/* === ACTIVITÉ === */
+/* === ACTIVITÉ MODIFIÉE UNIQUEMENT === */
 
 function genSim() {
   const n = +simN.value;
   let html = "";
+  let opts = "";
+
   for (let i = 1; i <= n; i++) {
     html += `
       <div class="card">
         <strong>Joueur ${i}</strong>
-        <label><input type="checkbox" id="d${i}"> Mort</label>
-        <label><input type="radio" name="you" id="y${i}"> Vous</label>
-      </div>`;
+        <div class="result blue" id="pf${i}">FOUDEK : —</div>
+        <div class="result red" id="pc${i}">Classique : —</div>
+      </div>
+    `;
+    opts += `<option value="${i}">Joueur ${i}</option>`;
   }
+
   simZone.innerHTML = html;
+  voter.innerHTML = opts;
+  target.innerHTML = opts;
 }
 
 function runSim() {
   const n = +simN.value;
   const L = +simL.value;
 
-  let alive = 0;
-  for (let i = 1; i <= n; i++) {
-    if (!document.getElementById("d" + i).checked) alive++;
+  const I = 4;
+  const pf = 0.40;
+  const pc = L / n;
+
+  for (let i = I + 1; i <= n; i++) {
+    document.getElementById("pf" + i).textContent =
+      "FOUDEK : " + (pf * 100).toFixed(0) + " %";
+    document.getElementById("pc" + i).textContent =
+      "Classique : " + (pc * 100).toFixed(0) + " %";
   }
-
-  const I = Math.floor(alive / 2);
-  const R = alive - I;
-
-  let num = 0;
-  let den = 0;
-
-  for (let k = 0; k <= 1; k++) {
-    if (k > L || L - k > R) continue;
-    const c = C(I, k) * C(R, L - k);
-    den += c;
-    num += c * ((L - k) / R);
-  }
-
-  const pf = (num / den) * 100;
-  const pc = (L / alive) * 100;
-
-  simResF.textContent = "FOUDEK : " + pf.toFixed(1) + " %";
-  simResC.textContent = "Classique : " + pc.toFixed(1) + " %";
-
-  simBest.textContent =
-    pf < pc
-    ? "FOUDEK est plus précis pour un innocent"
-    : "La méthode classique est moins informative ici";
 }
 </script>
 
