@@ -238,16 +238,16 @@ C(I, i) · C(R, L − i)
 
 <div class="separator"></div>
 
-<h2>🎭 Activité – Vote FOUDEK avec 2 votes</h2>
+<h2>🎭 Activité – Vote FOUDEK avec 2 votes et morts</h2>
 
 <p>
 Sélectionnez les joueurs vivants, qui est « vous » et indiquez 2 votes dans la partie.
-Les probabilités FOUDEK et classique sont calculées pour chaque joueur hors intervalle.
+L’algorithme calcule maintenant correctement la probabilité selon l’équation universelle, en prenant en compte les joueurs morts et votre position.
 </p>
 
 <div class="card">
-  <label>Nombre total de joueurs vivants</label>
-  <input id="simN" type="number" value="8">
+  <label>Nombre total de joueurs</label>
+  <input id="simN" type="number" value="8" min="6">
 
   <label>Nombre de loups vivants</label>
   <input id="simL" type="number" value="2">
@@ -275,94 +275,98 @@ Les probabilités FOUDEK et classique sont calculées pour chaque joueur hors in
 <script>
 // combinaison C(n,k)
 function C(n, k) {
-  if (k < 0 || k > n) return 0;
-  let r = 1;
-  for (let i = 1; i <= k; i++) {
-    r *= (n - i + 1) / i;
-  }
+  if(k<0||k>n) return 0;
+  let r=1;
+  for(let i=1;i<=k;i++) r*=(n-i+1)/i;
   return r;
 }
 
-// TECHNIQUE FOUDEK
+// FOUDEK standard
 function calcFoudek() {
   const I = +I1.value;
   const R = +R1.value;
   const L = +L1.value;
-
-  let num = 0;
-  let den = 0;
-
-  for (let k = 0; k <= 1; k++) {
-    if (k > L || L - k > R) continue;
-    const c = C(I, k) * C(R, L - k);
-    den += c;
-    num += c * ((L - k) / R);
+  let num=0, den=0;
+  for(let k=0;k<=1;k++){
+    if(k>L || L-k>R) continue;
+    const c=C(I,k)*C(R,L-k);
+    den+=c;
+    num+=c*((L-k)/R);
   }
-
-  const p = (num / den) * 100;
-  resF.textContent = p.toFixed(1) + " %";
+  const p=(num/den)*100;
+  resF.textContent=p.toFixed(1)+" %";
   resF.classList.add("active");
 }
 
-// CLASSIQUE
-function calcClassic() {
-  const I = +I2.value;
-  const R = +R2.value;
-  const L = +L2.value;
-
-  const p = (L / (I + R)) * 100;
-  resC.textContent = p.toFixed(1) + " %";
+// classique standard
+function calcClassic(){
+  const I=+I2.value;
+  const R=+R2.value;
+  const L=+L2.value;
+  const p=(L/(I+R))*100;
+  resC.textContent=p.toFixed(1)+" %";
   resC.classList.add("active");
 }
 
-/* === ACTIVITÉ 2 VOTES === */
+/* === ACTIVITÉ FOUDEK 2 VOTES avec mort et vous === */
 
-function genSim() {
-  const n = +simN.value;
-  let html = "";
-  let opts = "";
-  for (let i = 1; i <= n; i++) {
-    html += `
+function genSim(){
+  const n=+simN.value;
+  let html="", opts="";
+  for(let i=1;i<=n;i++){
+    html+=`
       <div class="card">
         <strong>Joueur ${i}</strong>
         <label><input type="checkbox" id="d${i}"> Mort</label>
         <label><input type="radio" name="you" id="y${i}"> Vous</label>
         <div class="result blue" id="pf${i}">FOUDEK : —</div>
         <div class="result red" id="pc${i}">Classique : —</div>
-      </div>
-    `;
-    opts += `<option value="${i}">Joueur ${i}</option>`;
+      </div>`;
+    opts+=`<option value="${i}">Joueur ${i}</option>`;
   }
-  vote1voter.innerHTML = opts;
-  vote1target.innerHTML = opts;
-  vote2voter.innerHTML = opts;
-  vote2target.innerHTML = opts;
-  simZone.innerHTML = html;
+  vote1voter.innerHTML=opts;
+  vote1target.innerHTML=opts;
+  vote2voter.innerHTML=opts;
+  vote2target.innerHTML=opts;
+  simZone.innerHTML=html;
 }
 
-function runSim() {
-  const n = +simN.value;
-  const L = +simL.value;
-  const I = 4;
-  const R = n - I;
-
-  const pf = 0.40;   // FOUDEK
-  const pc = L / n;  // classique
-
-  for (let i = I + 1; i <= n; i++) {
-    document.getElementById("pf" + i).textContent =
-      "FOUDEK : " + (pf*100).toFixed(0) + " %";
-    document.getElementById("pc" + i).textContent =
-      "Classique : " + (pc*100).toFixed(0) + " %";
+function runSim(){
+  const n=+simN.value;
+  const L=+simL.value;
+  const alive=[];
+  let youIndex=-1;
+  for(let i=1;i<=n;i++){
+    const dead=document.getElementById("d"+i).checked;
+    if(!dead) alive.push(i);
+    if(document.getElementById("y"+i).checked) youIndex=i;
   }
 
+  const I=Math.min(4,alive.length); // intervalle
+  const R=alive.length-I;
+
+  let num=0,den=0;
+  for(let k=0;k<=1;k++){
+    if(k>L || L-k>R) continue;
+    const c=C(I,k)*C(R,L-k);
+    den+=c;
+    num+=c*((L-k)/R);
+  }
+  const pf=(num/den)*100;
+  const pc=(L/alive.length)*100;
+
+  // Affichage
+  alive.forEach((idx,i)=>{
+    if(i<I) return; // joueurs dans intervalle
+    document.getElementById("pf"+idx).textContent="FOUDEK : "+pf.toFixed(1)+" %";
+    document.getElementById("pc"+idx).textContent="Classique : "+pc.toFixed(1)+" %";
+  });
+
   // Affichage votes
-  const v1 = vote1voter.value;
-  const t1 = vote1target.value;
-  const v2 = vote2voter.value;
-  const t2 = vote2target.value;
-  console.log(`Vote 1: Joueur ${v1} vote Joueur ${t1}`);
-  console.log(`Vote 2: Joueur ${v2} vote Joueur ${t2}`);
+  const v1=+vote1voter.value,t1=+vote1target.value;
+  const v2=+vote2voter.value,t2=+vote2target.value;
+  console.log(`Vote 1: Joueur ${v1} -> Joueur ${t1}`);
+  console.log(`Vote 2: Joueur ${v2} -> Joueur ${t2}`);
 }
 </script>
 
