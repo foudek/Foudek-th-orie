@@ -106,10 +106,10 @@ button {
 
 .voteInfo { margin-top: 5px; font-size: 13px; color: #9ca3af; }
 
-/* colonne verticale pour joueurs */
+/* affichage joueurs horizontal */
 #simZone {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: 20px;
 }
@@ -223,27 +223,22 @@ C(I, i) · C(R, L − i)
 <div class="card" style="margin-top:30px;">
 <h3>Votes</h3>
 <label>Vote 1 - Joueur :</label>
-<select id="vote1voter"></select>
-<select id="vote1target"></select>
+<select id="vote1voter" onchange="updateSim()"></select>
+<select id="vote1target" onchange="updateSim()"></select>
 <label>Vote 2 - Joueur (optionnel) :</label>
-<select id="vote2voter"><option value="">Aucun</option></select>
-<select id="vote2target"><option value="">Aucun</option></select>
+<select id="vote2voter" onchange="updateSim()"><option value="">Aucun</option></select>
+<select id="vote2target" onchange="updateSim()"><option value="">Aucun</option></select>
 </div>
 
 </div>
 
 <script>
-function C(n,k){
-  if(k<0||k>n) return 0;
-  let r=1; for(let i=1;i<=k;i++) r*=(n-i+1)/i;
-  return r;
-}
+function C(n,k){if(k<0||k>n)return 0;let r=1;for(let i=1;i<=k;i++)r*=(n-i+1)/i;return r;}
 
 function calcFoudek(){
   const I=+I1.value; const R=+R1.value; const L=+L1.value;
   let num=0,den=0;
-  for(let k=0;k<=1;k++){ if(k>L||L-k>R) continue;
-    const c=C(I,k)*C(R,L-k); den+=c; num+=c*((L-k)/R);}
+  for(let k=0;k<=1;k++){if(k>L||L-k>R) continue; const c=C(I,k)*C(R,L-k); den+=c; num+=c*((L-k)/R);}
   const p=(num/den)*100;
   resF.textContent=p.toFixed(1)+" %"; resF.classList.add("active");
 }
@@ -254,15 +249,13 @@ function calcClassic(){
   resC.textContent=p.toFixed(1)+" %"; resC.classList.add("active");
 }
 
-/* === ACTIVITÉ avec actualisation automatique et colonnes === */
 let history=[];
-
 function genSim(){
   history=[];
   const n=+simN.value;
   let html="", opts="";
   for(let i=1;i<=n;i++){
-    html+=`<div class="card" id="card${i}">
+    html+=`<div class="card" id="card${i}" style="width:120px">
       <strong>Joueur ${i}</strong>
       <label><input type="checkbox" id="d${i}" onchange="updateSim()"/> Mort</label>
       <label><input type="radio" name="you" id="y${i}" onchange="updateSim()"/> Vous</label>
