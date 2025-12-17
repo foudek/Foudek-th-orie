@@ -244,10 +244,10 @@ C(I, i) · C(R, L − i)
 
 <div class="separator"></div>
 
-<h2>🎭 Activité – Probabilités FOUDEK hors intervalle</h2>
+<h2>🎭 Activité – Probabilités FOUDEK hors intervalle avec "vous"</h2>
 
 <p>
-Indiquez les joueurs vivants, qui est « vous » et jusqu’à 2 votes par tour. Les probabilités sont calculées uniquement pour les joueurs **hors intervalle**.
+Indiquez les joueurs vivants, qui est « vous » et jusqu’à 2 votes par tour. Les probabilités sont calculées uniquement pour les joueurs **hors intervalle**, mais **le joueur « vous » est compté dans le total pour FOUDEK et classique**.
 </p>
 
 <div class="card">
@@ -313,7 +313,7 @@ function calcClassic(){
   resC.classList.add("active");
 }
 
-/* === ACTIVITÉ FOUDEK hors intervalle === */
+/* === ACTIVITÉ FOUDEK hors intervalle avec "vous" === */
 
 let history=[];
 
@@ -363,6 +363,7 @@ function runSim(){
     document.getElementById("pc"+i).textContent="Classique : —";
   }
 
+  // créer intervalles
   const intervals=[];
   history.forEach(tour=>{
     tour.forEach(v=>{
@@ -386,28 +387,31 @@ function runSim(){
     }
   });
 
-  // déterminer joueurs dans les intervalles
+  // joueurs dans intervalles
   const inInterval=new Set();
   merged.forEach(m=>{
     for(let i=m[0];i<=m[1];i++) inInterval.add(i);
   });
 
-  // calcul uniquement hors intervalle et hors vous
+  // calcul hors intervalle
+  const totalPlayers=alive.length + (youIndex>0?1:0); // inclure "vous"
+  const totalOutsideIntervals=totalPlayers - Array.from(inInterval).length - (youIndex>0?1:0);
+
   alive.forEach(idx=>{
     if(idx===youIndex) return;
     if(inInterval.has(idx)) return;
 
-    const R=alive.length - merged.reduce((sum,m)=>sum+(m[1]-m[0]+1),0) - 1; // hors intervalle et hors vous
-    const I= Math.min(4, alive.length-R-1); // taille d’un intervalle hypothétique FOUDEK
+    const R=totalOutsideIntervals;
+    const I=Math.min(4,totalPlayers-R); // intervalle hypothétique
     let num=0, den=0;
     for(let k=0;k<=1;k++){
-      if(k>L || L-k>R) continue;
+      if(k>L||L-k>R) continue;
       const c=C(I,k)*C(R,L-k);
       den+=c;
       num+=c*((L-k)/R);
     }
     const pf=(den>0)? (num/den)*100:0;
-    const pc=(alive.length>0)? (L/alive.length)*100:0;
+    const pc=(totalPlayers>0)? (L/totalPlayers)*100:0;
     document.getElementById("pf"+idx).textContent="FOUDEK : "+pf.toFixed(1)+" %";
     document.getElementById("pc"+idx).textContent="Classique : "+pc.toFixed(1)+" %";
   });
