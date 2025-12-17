@@ -25,7 +25,7 @@ li{margin:8px 0;}
 .card.blue{box-shadow:0 0 18px rgba(37, 99, 235, 0.35);}
 .card.red{box-shadow:0 0 18px rgba(220, 38, 38, 0.35);}
 label{display:block;margin-top:12px;font-size:14px;}
-input,select,textarea{width:100%; margin-top:6px; padding:8px; background:#0e0f14; border:1px solid #3a3d4d; border-radius:6px; color:#e6e7eb;}
+input,select{width:100%; margin-top:6px; padding:8px; background:#0e0f14; border:1px solid #3a3d4d; border-radius:6px; color:#e6e7eb;}
 button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px; background:#2563eb; color:white; font-weight:bold; cursor:pointer;}
 .result{margin-top:10px; padding:10px; border-radius:999px; text-align:center; font-weight:bold; opacity:0.35; transition:opacity 0.3s, box-shadow 0.3s;}
 .result.blue{background:#1d4ed8;}
@@ -43,73 +43,16 @@ button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px
 
 <!-- === IA TEXTE LIBRE === -->
 <div class="card" style="margin-bottom:30px;">
-<h3>🤖 Mini IA – Probabilités hors intervalle</h3>
-<label>Décris la situation de la partie (pseudos, morts, votes)</label>
-<textarea id="iaInput" rows="5" placeholder="Exemple : zytronx vote kader, keraod vote medna, medna est mort"></textarea>
-<button onclick="runIA()">Analyser</button>
-<div id="iaResults" style="margin-top:10px;"></div>
+<h2>🧠 IA – Probabilités hors intervalle</h2>
+<label>Entrez les pseudos des joueurs séparés par des virgules :</label>
+<input type="text" id="iaPlayers" placeholder="ex: Medna,Kader,Keraod,...">
+<label>Indiquez les morts à la nuit 1 (séparés par des virgules si plusieurs) :</label>
+<input type="text" id="iaDead" placeholder="ex: Keraod">
+<label>Votes (format: votant>ciblé, séparés par des virgules) :</label>
+<input type="text" id="iaVotes" placeholder="ex: Medna>Kader,Keraod>Tilf">
+<button onclick="runIA()">Calculer probabilités IA</button>
+<div id="iaResult" class="result active" style="margin-top:10px;"></div>
 </div>
-
-<script>
-function C(n,k){if(k<0||k>n)return 0;let r=1;for(let i=1;i<=k;i++)r*=(n-i+1)/i;return r;}
-
-function parseIAInput(text){
-  const lines = text.split(/[,.\n]/);
-  const playersSet = new Set();
-  const votes = [];
-  const dead = new Set();
-  lines.forEach(line=>{
-    line=line.trim().toLowerCase();
-    if(!line) return;
-    // Detect death
-    let m=line.match(/(\w+)\s+est\s+mort/);
-    if(m){ dead.add(m[1]); playersSet.add(m[1]); return; }
-    // Detect votes
-    let v=line.match(/(\w+)\s+vote\s+(\w+)/);
-    if(v){ votes.push({from:v[1],to:v[2]}); playersSet.add(v[1]); playersSet.add(v[2]); return; }
-    // Detect players
-    line.split(/\s+/).forEach(w=>playersSet.add(w));
-  });
-  return {players:Array.from(playersSet),votes,dead};
-}
-
-function runIA(){
-  const input=document.getElementById("iaInput").value;
-  const {players,votes,dead}=parseIAInput(input);
-  const requester = 'utilisateur'; // la personne demandant la proba
-  if(!players.includes(requester)) players.push(requester);
-  const alive = players.filter(p=>!dead.has(p));
-  const totalPlayers = alive.length - 1; // requester inclus mais exclu du calcul
-  const L = 2; // nombre de loups (modifiable si champ ajouté)
-  
-  // Déterminer intervalles
-  const inInterval=new Set();
-  votes.forEach(v=>{
-    let a=Math.min(players.indexOf(v.from),players.indexOf(v.to));
-    let b=Math.max(players.indexOf(v.from),players.indexOf(v.to));
-    if(b-a+1>4) b=a+3;
-    for(let i=a;i<=b;i++) inInterval.add(alive[i]);
-  });
-
-  let results='';
-  alive.forEach(p=>{
-    if(p===requester || inInterval.has(p)) return;
-    const R=totalPlayers-inInterval.size;
-    const I=Math.min(4,totalPlayers-R);
-    // FOUDEK
-    let numF=0,denF=0;
-    for(let k=0;k<=1;k++){if(k>L||L-k>R) continue; const c=C(I,k)*C(R,L-k); denF+=c; numF+=c*((L-k)/R);}
-    const pf=(denF>0)? (numF/denF)*100 : 0;
-    // Classique
-    let numC=0,denC=0;
-    for(let k=0;k<=2;k++){if(k>L||L-k>R) continue; const c=C(I,k)*C(R,L-k); denC+=c; numC+=c*((L-k)/R);}
-    const pc=(denC>0)? (numC/denC)*100 : 0;
-    results+=`<div>${p} : FOUDEK ${pf.toFixed(1)}%, Classique ${pc.toFixed(1)}%</div>`;
-  });
-  if(!results) results='Aucun joueur hors intervalle pour le calcul.';
-  document.getElementById("iaResults").innerHTML=results;
-}
-</script>
 
 <h2>Pourquoi il n’y a jamais plus de 1 loup sur 4</h2>
 <p>Dans la technique de FOUDEK, on considère uniquement les cas où un intervalle de 4 joueurs contient 0 ou 1 loup.</p>
@@ -206,7 +149,11 @@ C(I, i) · C(R, L − i)
 <select id="vote2target" onchange="updateSim()"></select>
 </div>
 
+</div>
+
 <script>
+function C(n,k){if(k<0||k>n)return 0;let r=1;for(let i=1;i<=k;i++)r*=(n-i+1)/i;return r;}
+
 function calcFoudek(){
   const I=+I1.value,R=+R1.value,L=+L1.value;
   let num=0,den=0;
@@ -223,6 +170,7 @@ function calcClassic(){
   resC.textContent=p.toFixed(1)+" %"; resC.classList.add("active");
 }
 
+/* === ACTIVITÉ === */
 function genSim(){
   const n=+simN.value,L=+simL.value;
   let html="", opts="";
@@ -295,6 +243,59 @@ function updateSim(){
   votes.forEach(v=>{
     document.getElementById("voteInfo"+v.to).textContent=`Joueur ${v.from} vote pour lui`;
   });
+}
+
+/* === IA TEXTE LIBRE CALCUL === */
+function runIA(){
+  const players = iaPlayers.value.split(',').map(s=>s.trim()).filter(s=>s);
+  const dead = iaDead.value.split(',').map(s=>s.trim()).filter(s=>s);
+  const votesInput = iaVotes.value.split(',').map(s=>s.trim()).filter(s=>s);
+  const L = +simL.value;
+
+  if(players.length<2){ iaResult.textContent="Entrez au moins 2 joueurs"; return; }
+
+  const alive = players.filter(p=>!dead.includes(p));
+  const votes = votesInput.map(v=>{
+    const [from,to] = v.split('>').map(s=>s.trim());
+    return {from,to};
+  });
+
+  // Identifier intervalles
+  const inInterval = new Set();
+  votes.forEach(v=>{
+    const idxFrom = players.indexOf(v.from);
+    const idxTo = players.indexOf(v.to);
+    let a = Math.min(idxFrom,idxTo);
+    let b = Math.max(idxFrom,idxTo);
+    if(b-a+1>4) b=a+3;
+    for(let i=a;i<=b;i++) inInterval.add(players[i]);
+  });
+
+  const outside = alive.filter(p=>!inInterval.has(p));
+
+  const results = outside.map(p=>{
+    const R = outside.length;
+    const I = Math.min(4, alive.length - R);
+    // FOUDEK
+    let numF=0,denF=0;
+    for(let k=0;k<=1;k++){
+      if(k>L||L-k>R) continue;
+      const c=C(I,k)*C(R,L-k);
+      denF+=c; numF+=c*((L-k)/R);
+    }
+    const pf=(denF>0)? (numF/denF)*100 : 0;
+    // Classique
+    let numC=0,denC=0;
+    for(let k=0;k<=2;k++){
+      if(k>L||L-k>R) continue;
+      const c=C(I,k)*C(R,L-k);
+      denC+=c; numC+=c*((L-k)/R);
+    }
+    const pc=(denC>0)? (numC/denC)*100 : 0;
+    return `${p} → FOUDEK: ${pf.toFixed(1)}%, Classique: ${pc.toFixed(1)}%`;
+  });
+
+  iaResult.textContent = results.join(' | ');
 }
 </script>
 </body>
