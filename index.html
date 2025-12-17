@@ -11,8 +11,7 @@ body {
   padding: 0;
   background: #0e0f14;
   color: #e6e7eb;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-               Roboto, Oxygen, Ubuntu, Cantarell, "Inter", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Inter", sans-serif;
 }
 
 .container {
@@ -89,8 +88,7 @@ button {
 .result.blue { background: #1d4ed8; }
 .result.red { background: #dc2626; }
 
-/* ===== SIMULATION ===== */
-
+/* Simulation visuelle */
 .board {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -106,9 +104,7 @@ button {
   transition: 0.3s;
 }
 
-.player.you {
-  border: 2px solid #22c55e;
-}
+.player.you { border: 2px solid #22c55e; }
 
 .player.interval {
   box-shadow: 0 0 20px rgba(37,99,235,0.6);
@@ -120,9 +116,7 @@ button {
   text-align: center;
 }
 
-.controls input {
-  width: 260px;
-}
+.controls input { width: 260px; }
 
 .best {
   margin-top: 20px;
@@ -140,43 +134,32 @@ button {
 
 <h1>FOUDEK – Probabilité hors intervalle</h1>
 
-<!-- ===== TABLEAUX (INCHANGÉS) ===== -->
-
+<!-- Tableaux inchangés -->
 <div class="cards">
   <div class="card blue">
     <h3>Méthode FOUDEK</h3>
-
     <label>Joueurs dans l’intervalle</label>
     <input id="I1" type="number">
-
     <label>Joueurs hors intervalle</label>
     <input id="R1" type="number">
-
     <label>Loups vivants</label>
     <input id="L1" type="number">
-
     <button onclick="calcFoudek()">Calculer</button>
     <div id="resF" class="result blue">—</div>
   </div>
 
   <div class="card red">
     <h3>Méthode Classique</h3>
-
     <label>Joueurs dans l’intervalle</label>
     <input id="I2" type="number">
-
     <label>Joueurs hors intervalle</label>
     <input id="R2" type="number">
-
     <label>Loups vivants</label>
     <input id="L2" type="number">
-
     <button onclick="calcClassic()">Calculer</button>
     <div id="resC" class="result red">—</div>
   </div>
 </div>
-
-<!-- ===== SIMULATION ===== -->
 
 <div class="separator"></div>
 
@@ -205,25 +188,21 @@ button {
 </div>
 
 <script>
-// ===== COMBINAISONS =====
+// COMBINAISONS
 function C(n, k) {
   if (k < 0 || k > n) return 0;
   var r = 1;
-  for (var i = 1; i <= k; i++) {
-    r = r * (n - i + 1) / i;
-  }
+  for (var i = 1; i <= k; i++) r = r * (n - i + 1) / i;
   return r;
 }
 
-// ===== FOUDEK =====
+// FOUDEK
 function calcFoudek() {
   var I = Number(document.getElementById("I1").value);
   var R = Number(document.getElementById("R1").value);
   var L = Number(document.getElementById("L1").value);
 
-  var num = 0;
-  var den = 0;
-
+  var num = 0, den = 0;
   for (var k = 0; k <= 1; k++) {
     if (k > L || L - k > R) continue;
     var c = C(I, k) * C(R, L - k);
@@ -236,7 +215,7 @@ function calcFoudek() {
   document.getElementById("resF").classList.add("active");
 }
 
-// ===== CLASSIQUE =====
+// CLASSIQUE
 function calcClassic() {
   var I = Number(document.getElementById("I2").value);
   var R = Number(document.getElementById("R2").value);
@@ -247,10 +226,10 @@ function calcClassic() {
   document.getElementById("resC").classList.add("active");
 }
 
-// ===== SIMULATION =====
+// SIMULATION 100% COMPATIBLE
 function simulate() {
   var voteInput = document.getElementById("votes").value;
-  var interval = new Set();
+  var interval = [];
 
   var players = document.getElementsByClassName("player");
   for (var i = 0; i < players.length; i++) {
@@ -262,21 +241,21 @@ function simulate() {
     for (var j = 0; j < votes.length; j++) {
       var parts = votes[j].split(">");
       if (parts.length === 2) {
-        interval.add(parts[0].trim());
-        interval.add(parts[1].trim());
+        var a = parts[0].trim();
+        var b = parts[1].trim();
+        if (interval.indexOf(a) === -1) interval.push(a);
+        if (interval.indexOf(b) === -1) interval.push(b);
       }
     }
   }
 
-  interval.forEach(function(id) {
-    var el = document.querySelector('.player[data-id="' + id + '"]');
-    if (el) {
-      el.classList.add("interval");
-    }
-  });
+  for (var k = 0; k < interval.length; k++) {
+    var el = document.querySelector('.player[data-id="' + interval[k] + '"]');
+    if (el) el.classList.add("interval");
+  }
 
   document.getElementById("best").textContent =
-    "Simulation effectuée — utilisez les tableaux ci-dessus pour lire la probabilité";
+    "Simulation effectuée — les probabilités restent celles calculées ci-dessus";
 }
 </script>
 
