@@ -244,10 +244,10 @@ C(I, i) · C(R, L − i)
 
 <div class="separator"></div>
 
-<h2>🎭 Activité – Vote FOUDEK multi-tours avec votes et morts</h2>
+<h2>🎭 Activité – Vote FOUDEK multi-tours avec intervalles partiels</h2>
 
 <p>
-Sélectionnez les joueurs vivants, qui est « vous » et indiquez jusqu’à 2 votes par tour. Les probabilités se recalculent à chaque tour selon l’évolution de la partie.
+Sélectionnez les joueurs vivants, qui est « vous » et indiquez jusqu’à 2 votes par tour. Les probabilités se recalculent à chaque tour même si l’intervalle n’est pas complet.
 </p>
 
 <div class="card">
@@ -313,7 +313,7 @@ function calcClassic(){
   resC.classList.add("active");
 }
 
-/* === ACTIVITÉ FOUDEK multi-tours === */
+/* === ACTIVITÉ FOUDEK multi-tours avec intervalles partiels === */
 
 let history=[]; // historique des tours
 
@@ -363,7 +363,8 @@ function runSim(){
     document.getElementById("voteInfo"+i).textContent="";
   }
 
-  const I=Math.min(4,alive.length); 
+  // intervalle dynamique (partiel possible)
+  const I=Math.min(4,alive.length);
   const R=alive.length-I;
 
   let num=0, den=0;
@@ -373,8 +374,8 @@ function runSim(){
     den+=c;
     num+=c*((L-k)/R);
   }
-  const pf=(num/den)*100;
-  const pc=(L/alive.length)*100;
+  const pf=(den>0)? (num/den)*100 : 0;
+  const pc=(alive.length>0)? (L/alive.length)*100 : 0;
 
   // affichage proba
   alive.forEach((idx,i)=>{
@@ -383,7 +384,7 @@ function runSim(){
     document.getElementById("pc"+idx).textContent="Classique : "+pc.toFixed(1)+" %";
   });
 
-  // affichage votes sous chaque joueur
+  // affichage votes
   history.forEach(tour=>{
     tour.forEach(v=>{
       document.getElementById("voteInfo"+v.to).textContent+=`Joueur ${v.from} vote pour lui\n`;
