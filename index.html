@@ -244,10 +244,10 @@ C(I, i) · C(R, L − i)
 
 <div class="separator"></div>
 
-<h2>🎭 Activité – Vote FOUDEK multi-tours avec intervalles dynamiques</h2>
+<h2>🎭 Activité – Probabilités FOUDEK hors intervalle</h2>
 
 <p>
-Sélectionnez les joueurs vivants, qui est « vous » et indiquez jusqu’à 2 votes par tour. Les probabilités se recalculent dynamiquement à chaque tour en utilisant les votes pour créer les intervalles, limités à 4 joueurs comme dans FOUDEK.
+Indiquez les joueurs vivants, qui est « vous » et jusqu’à 2 votes par tour. Les probabilités sont calculées uniquement pour les joueurs **hors intervalle**.
 </p>
 
 <div class="card">
@@ -279,21 +279,21 @@ Sélectionnez les joueurs vivants, qui est « vous » et indiquez jusqu’à 2 v
 
 <script>
 // combinaison C(n,k)
-function C(n, k) {
+function C(n,k){
   if(k<0||k>n) return 0;
   let r=1;
   for(let i=1;i<=k;i++) r*=(n-i+1)/i;
   return r;
 }
 
-// FOUDEK standard
-function calcFoudek() {
-  const I = +I1.value;
-  const R = +R1.value;
-  const L = +L1.value;
-  let num=0, den=0;
+// FOUDEK classique
+function calcFoudek(){
+  const I=+I1.value;
+  const R=+R1.value;
+  const L=+L1.value;
+  let num=0,den=0;
   for(let k=0;k<=1;k++){
-    if(k>L || L-k>R) continue;
+    if(k>L||L-k>R) continue;
     const c=C(I,k)*C(R,L-k);
     den+=c;
     num+=c*((L-k)/R);
@@ -303,7 +303,7 @@ function calcFoudek() {
   resF.classList.add("active");
 }
 
-// classique standard
+// classique
 function calcClassic(){
   const I=+I2.value;
   const R=+R2.value;
@@ -313,7 +313,7 @@ function calcClassic(){
   resC.classList.add("active");
 }
 
-/* === ACTIVITÉ FOUDEK avec intervalles dynamiques et max 4 === */
+/* === ACTIVITÉ FOUDEK hors intervalle === */
 
 let history=[];
 
@@ -345,7 +345,6 @@ function runSim(){
   const L=+simL.value;
   const votes=[];
 
-  // votes du tour
   const v1v=+vote1voter.value, v1t=+vote1target.value;
   if(v1v && v1t) votes.push({from:v1v,to:v1t});
   const v2v=vote2voter.value? +vote2voter.value:null;
@@ -353,7 +352,6 @@ function runSim(){
   if(v2v && v2t) votes.push({from:v2v,to:v2t});
   history.push(votes);
 
-  // récupérer joueurs vivants et vous
   const alive=[];
   let youIndex=-1;
   for(let i=1;i<=n;i++){
@@ -361,23 +359,22 @@ function runSim(){
     if(document.getElementById("y"+i).checked) youIndex=i;
     else if(!dead) alive.push(i);
     document.getElementById("voteInfo"+i).textContent="";
+    document.getElementById("pf"+i).textContent="FOUDEK : —";
+    document.getElementById("pc"+i).textContent="Classique : —";
   }
 
-  // créer intervalles dynamiques à partir des votes
   const intervals=[];
   history.forEach(tour=>{
     tour.forEach(v=>{
       if(alive.includes(v.from) && alive.includes(v.to)){
-        const a=Math.min(v.from,v.to), b=Math.max(v.from,v.to);
-        let size=b-a+1;
-        // limiter intervalle à 4 joueurs max
-        if(size>4) b=a+3;
+        let a=Math.min(v.from,v.to), b=Math.max(v.from,v.to);
+        if(b-a+1>4) b=a+3; // limite FOUDEK
         intervals.push([a,b]);
       }
     });
   });
 
-  // fusion des intervalles qui se chevauchent
+  // fusion
   const merged=[];
   intervals.sort((a,b)=>a[0]-b[0]);
   intervals.forEach(intv=>{
@@ -389,15 +386,19 @@ function runSim(){
     }
   });
 
-  // calcul FOUDEK pour chaque joueur hors vous
+  // déterminer joueurs dans les intervalles
+  const inInterval=new Set();
+  merged.forEach(m=>{
+    for(let i=m[0];i<=m[1];i++) inInterval.add(i);
+  });
+
+  // calcul uniquement hors intervalle et hors vous
   alive.forEach(idx=>{
-    let pf=0;
-    let interval=null;
-    merged.forEach(m=>{
-      if(idx>=m[0] && idx<=m[1]) interval=m;
-    });
-    let I=interval? interval[1]-interval[0]+1 : 1;
-    let R=alive.length - I;
+    if(idx===youIndex) return;
+    if(inInterval.has(idx)) return;
+
+    const R=alive.length - merged.reduce((sum,m)=>sum+(m[1]-m[0]+1),0) - 1; // hors intervalle et hors vous
+    const I= Math.min(4, alive.length-R-1); // taille d’un intervalle hypothétique FOUDEK
     let num=0, den=0;
     for(let k=0;k<=1;k++){
       if(k>L || L-k>R) continue;
@@ -405,8 +406,8 @@ function runSim(){
       den+=c;
       num+=c*((L-k)/R);
     }
-    pf=(den>0)? (num/den)*100 : 0;
-    const pc=(alive.length>0)? (L/alive.length)*100 :0;
+    const pf=(den>0)? (num/den)*100:0;
+    const pc=(alive.length>0)? (L/alive.length)*100:0;
     document.getElementById("pf"+idx).textContent="FOUDEK : "+pf.toFixed(1)+" %";
     document.getElementById("pc"+idx).textContent="Classique : "+pc.toFixed(1)+" %";
   });
