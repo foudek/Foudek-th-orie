@@ -24,7 +24,7 @@ li{margin:8px 0;}
 .card{background:#0e0f14; border:1px solid #2a2c36; border-radius:14px; padding:20px; width:300px;}
 .card.blue{box-shadow:0 0 18px rgba(37, 99, 235, 0.35);}
 .card.red{box-shadow:0 0 18px rgba(220, 38, 38, 0.35);}
-label{display:block;margin-top:12px;}
+label{display:block;margin-top:12px;font-size:14px;}
 input,select{width:100%; margin-top:6px; padding:8px; background:#0e0f14; border:1px solid #3a3d4d; border-radius:6px; color:#e6e7eb;}
 button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px; background:#2563eb; color:white; font-weight:bold; cursor:pointer;}
 .result{margin-top:10px; padding:10px; border-radius:999px; text-align:center; font-weight:bold; opacity:0.35; transition:opacity 0.3s, box-shadow 0.3s;}
@@ -39,27 +39,6 @@ button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px
 <body>
 <div class="container">
 
-<h1> IA – Probabilités hors intervalle</h1>
-
-<div class="card">
-<h3>Configuration de la partie</h3>
-<label>Liste des pseudos (séparés par des virgules)</label>
-<input id="pseudoList" placeholder="ex: medna,kader,keraod,tilf,...">
-<label>Nombre de loups vivants</label>
-<input type="number" id="LIA" value="2">
-<label>Joueurs morts (optionnel, séparés par des virgules)</label>
-<input id="deadList" placeholder="ex: medna,keraod">
-<label>Nombre de joueurs dans l'intervalle</label>
-<input type="number" id="intervalCount" value="0" min="0">
-<label>Pseudos des joueurs dans l'intervalle (séparés par des virgules)</label>
-<input id="intervalPlayers" placeholder="ex: kader,tilf">
-<button onclick="runIA()">Calculer probabilités IA</button>
-</div>
-
-<div id="iaResults"></div>
-
-<div class="separator"></div>
-
 <h1>FOUDEK – Théorie et probabilité hors intervalle</h1>
 
 <h2>Pourquoi il n’y a jamais plus de 1 loup sur 4</h2>
@@ -67,7 +46,7 @@ button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px
 <p>La raison est purement probabiliste : si un intervalle contenait 2 loups sur 4, alors la probabilité qu’un joueur innocent vote un innocent serait plus élevée que la probabilité de voter un loup.</p>
 <p>Autrement dit, dépasser 1/4 rend la décision irrationnelle pour un innocent cherchant à optimiser son vote. Ces mondes sont donc exclus par construction dans la technique FOUDEK.</p>
 
-<p>La théorie FOUDEK correspond à une situation où un joueur innocent, inconsciemment, pense qu’il y a un loup hors de son intervalle immédiat. Cette intuition guide ses votes et influence la formation des intervalles probables.</p>
+<p>La théorie FOUDEK correspond à une situation où un joueur innocent, **inconsciemment**, pense qu’il y a un loup hors de son intervalle immédiat. Cette intuition guide ses votes et influence la formation des intervalles probables.</p>
 
 <p>Dans une partie réelle, on peut repérer les indices de 1/4 maximum par différents comportements :</p>
 <p>Une conversation entre deux joueurs peut révéler des indices sur deux potentiels intervalles distincts.</p>
@@ -228,7 +207,6 @@ function updateSim(){
     if(inInterval.has(idx)) return;
     const R=totalOutside;
     const I=Math.min(4,totalPlayers-R);
-    // FOUDEK
     let numF=0,denF=0;
     for(let k=0;k<=1;k++){
       if(k>L||L-k>R) continue;
@@ -236,7 +214,6 @@ function updateSim(){
       denF+=c; numF+=c*((L-k)/R);
     }
     const pf=(denF>0)? (numF/denF)*100 : 0;
-    // Classique
     let numC=0,denC=0;
     for(let k=0;k<=2;k++){
       if(k>L||L-k>R) continue;
@@ -251,49 +228,6 @@ function updateSim(){
   votes.forEach(v=>{
     document.getElementById("voteInfo"+v.to).textContent=`Joueur ${v.from} vote pour lui`;
   });
-}
-
-/* === IA CORRIGÉE === */
-function runIA(){
-  const pseudos=document.getElementById("pseudoList").value.split(",").map(s=>s.trim()).filter(s=>s);
-  const dead=document.getElementById("deadList").value.split(",").map(s=>s.trim()).filter(s=>s);
-  const intervalCount=+document.getElementById("intervalCount").value;
-  const intervalPlayers=document.getElementById("intervalPlayers").value.split(",").map(s=>s.trim()).filter(s=>s);
-  const L=+document.getElementById("LIA").value;
-
-  const alive=pseudos.filter(p=>!dead.includes(p));
-  const outside=alive.filter(p=>!intervalPlayers.includes(p));
-
-  let results="";
-  outside.forEach(player=>{
-    // Calcul FOUDEK
-    const I=Math.min(4,intervalCount);
-    const R=outside.length;
-    let numF=0,denF=0;
-    for(let k=0;k<=1;k++){
-      if(k>L||L-k>R) continue;
-      const c=C(I,k)*C(R,L-k);
-      denF+=c; numF+=c*((L-k)/R);
-    }
-    const pf=(denF>0)? (numF/denF)*100 : 0;
-
-    // Calcul classique
-    let numC=0,denC=0;
-    for(let k=0;k<=2;k++){
-      if(k>L||L-k>R) continue;
-      const c=C(I,k)*C(R,L-k);
-      denC+=c; numC+=c*((L-k)/R);
-    }
-    const pc=(denC>0)? (numC/denC)*100 : 0;
-
-    results+=`<div class="card">
-      <strong>${player}</strong>
-      <div class="result blue">FOUDEK : ${pf.toFixed(1)} %</div>
-      <div class="result red">Classique : ${pc.toFixed(1)} %</div>
-    </div>`;
-  });
-
-  document.getElementById("iaResults").innerHTML=results;
 }
 </script>
 </body>
