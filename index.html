@@ -25,7 +25,7 @@ li{margin:8px 0;}
 .card.blue{box-shadow:0 0 18px rgba(37, 99, 235, 0.35);}
 .card.red{box-shadow:0 0 18px rgba(220, 38, 38, 0.35);}
 label{display:block;margin-top:12px;font-size:14px;}
-input,select,textarea{width:100%; margin-top:6px; padding:8px; background:#0e0f14; border:1px solid #3a3d4d; border-radius:6px; color:#e6e7eb;}
+input,select{width:100%; margin-top:6px; padding:8px; background:#0e0f14; border:1px solid #3a3d4d; border-radius:6px; color:#e6e7eb;}
 button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px; background:#2563eb; color:white; font-weight:bold; cursor:pointer;}
 .result{margin-top:10px; padding:10px; border-radius:999px; text-align:center; font-weight:bold; opacity:0.35; transition:opacity 0.3s, box-shadow 0.3s;}
 .result.blue{background:#1d4ed8;}
@@ -39,25 +39,24 @@ button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px
 <body>
 <div class="container">
 
-<h1>🧠 FOUDEK – Probabilités hors intervalle avec IA</h1>
-
+<!-- === IA PROBABILITÉS === -->
 <div class="card">
-  <h3>Intelligence artificielle</h3>
-  <label>Liste des pseudos (séparés par une virgule)</label>
+  <h3>🧠 IA Probabilités hors intervalle</h3>
+  <label>Pseudos des joueurs (séparés par virgule)</label>
   <input id="iaPlayers" type="text" placeholder="ex: medna,kader,keraod,tilf,...">
-  <label>Qui a voté qui ? (ex: medna>kader, keraod>tilf)</label>
+  <label>Votes (ex: medna>kader, keraod>tilf)</label>
   <input id="iaVotes" type="text" placeholder="ex: medna>kader, keraod>tilf">
   <label>Joueurs morts nuit 1 (séparés par virgule)</label>
   <input id="iaDead" type="text" placeholder="ex: kader">
-  <label>Votre pseudo (ne sera pas compté comme hors intervalle)</label>
+  <label>Votre pseudo (ne sera pas compté)</label>
   <input id="iaYou" type="text" placeholder="ex: medna">
   <label>Nombre de loups vivants</label>
   <input id="iaL" type="number" value="2">
-  <button onclick="runIA()">Calculer les probabilités</button>
+  <button onclick="runIA()">Calculer</button>
   <div id="iaResults"></div>
 </div>
 
-<div class="separator"></div>
+<h1>FOUDEK – Théorie et probabilité hors intervalle</h1>
 
 <h2>Pourquoi il n’y a jamais plus de 1 loup sur 4</h2>
 <p>Dans la technique de FOUDEK, on considère uniquement les cas où un intervalle de 4 joueurs contient 0 ou 1 loup.</p>
@@ -250,7 +249,7 @@ function updateSim(){
   });
 }
 
-/* === IA CORRIGÉE === */
+/* === IA CALCUL FIDÈLE === */
 function runIA(){
   const playersRaw=document.getElementById("iaPlayers").value.trim();
   if(!playersRaw){ alert("Veuillez entrer les pseudos"); return; }
@@ -273,28 +272,39 @@ function runIA(){
   });
 
   const results=[];
-  for(let i=0;i<players.length;i++){
-    const p=players[i];
-    if(dead.includes(p)) continue;
-    if(p===you) continue;
-    const idx=i+1;
-    if(inInterval.has(idx)) continue;
-    const R=players.length - inInterval.size - (dead.length>0?dead.length:0) -1; // exclut la personne qui pose la question
-    const I=Math.min(4,players.length - R - dead.length);
+  const totalPlayers=players.length;
+  const R=totalPlayers-inInterval.size-(dead.length>0?dead.length:0)-1; // exclut la personne qui pose la question
+  const I=Math.min(4,totalPlayers-R-dead.length);
+
+  players.forEach(p=>{
+    if(dead.includes(p)) return;
+    if(p===you) return;
+    const idx=players.indexOf(p)+1;
+    if(inInterval.has(idx)) return;
+
     // FOUDEK
-    let numF=0,denF=0;
+    let numF=0, denF=0;
     for(let k=0;k<=1;k++){
-      if(k>L||L-k>R) continue;
+      if(k>L || L-k>R) continue;
       const c=C(I,k)*C(R,L-k);
       denF+=c; numF+=c*((L-k)/R);
     }
     const pf=(denF>0)? (numF/denF)*100 : 0;
+
     // Classique
-    let numC=0,denC=0;
+    let numC=0, denC=0;
     for(let k=0;k<=2;k++){
-      if(k>L||L-k>R) continue;
+      if(k>L || L-k>R) continue;
       const c=C(I,k)*C(R,L-k);
       denC+=c; numC+=c*((L-k)/R);
     }
     const pc=(denC>0)? (numC/denC)*100 : 0;
-    results.push(`${p}: FOUDEK ${pf.toFixed(1)}% | Classique ${pc.toFixed(1)}
+
+    results.push(`${p}: FOUDEK ${pf.toFixed(1)}% | Classique ${pc.toFixed(1)}%`);
+  });
+
+  document.getElementById("iaResults").innerHTML=results.join("<br>");
+}
+</script>
+</body>
+</html>
