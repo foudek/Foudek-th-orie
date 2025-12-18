@@ -25,7 +25,7 @@ li{margin:8px 0;}
 .card.blue{box-shadow:0 0 18px rgba(37, 99, 235, 0.35);}
 .card.red{box-shadow:0 0 18px rgba(220, 38, 38, 0.35);}
 label{display:block;margin-top:12px;font-size:14px;}
-input,select{width:100%; margin-top:6px; padding:8px; background:#0e0f14; border:1px solid #3a3d4d; border-radius:6px; color:#e6e7eb;}
+input,select,textarea{width:100%; margin-top:6px; padding:8px; background:#0e0f14; border:1px solid #3a3d4d; border-radius:6px; color:#e6e7eb;}
 button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px; background:#2563eb; color:white; font-weight:bold; cursor:pointer;}
 .result{margin-top:10px; padding:10px; border-radius:999px; text-align:center; font-weight:bold; opacity:0.35; transition:opacity 0.3s, box-shadow 0.3s;}
 .result.blue{background:#1d4ed8;}
@@ -39,21 +39,18 @@ button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px
 <body>
 <div class="container">
 
-<!-- === IA PROBABILITÉS === -->
-<div class="card">
-  <h3>🧠 IA Probabilités hors intervalle</h3>
-  <label>Pseudos des joueurs (séparés par virgule)</label>
-  <input id="iaPlayers" type="text" placeholder="ex: medna,kader,keraod,tilf,...">
-  <label>Votes (ex: medna>kader, keraod>tilf)</label>
-  <input id="iaVotes" type="text" placeholder="ex: medna>kader, keraod>tilf">
-  <label>Joueurs morts nuit 1 (séparés par virgule)</label>
-  <input id="iaDead" type="text" placeholder="ex: kader">
-  <label>Votre pseudo (ne sera pas compté)</label>
-  <input id="iaYou" type="text" placeholder="ex: medna">
-  <label>Nombre de loups vivants</label>
-  <input id="iaL" type="number" value="2">
-  <button onclick="runIA()">Calculer</button>
-  <div id="iaResults"></div>
+<h1>🧠 FOUDEK – Théorie et probabilité hors intervalle (IA)</h1>
+
+<div class="card" style="margin-bottom:30px;">
+<h3>Mini IA Loup-Garou</h3>
+<label>Liste des pseudos (séparés par une virgule)</label>
+<textarea id="iaPlayers" placeholder="ex: Medna,Kader,Keraod,Tilf"></textarea>
+<label>Votes (ex: Medna>Kader,Keraod>Tilf)</label>
+<textarea id="iaVotes" placeholder="Séparer les votes par une virgule"></textarea>
+<label>Morts Nuit 1 (séparés par une virgule si plusieurs)</label>
+<input id="iaDead" placeholder="ex: Tilf">
+<button onclick="runIA()">Calculer probabilités</button>
+<div id="iaResults" style="margin-top:15px;"></div>
 </div>
 
 <h1>FOUDEK – Théorie et probabilité hors intervalle</h1>
@@ -249,61 +246,68 @@ function updateSim(){
   });
 }
 
-/* === IA CALCUL FIDÈLE === */
+/* === IA corrigée === */
 function runIA(){
-  const playersRaw=document.getElementById("iaPlayers").value.trim();
-  if(!playersRaw){ alert("Veuillez entrer les pseudos"); return; }
-  const players=playersRaw.split(",").map(s=>s.trim()).filter(s=>s);
-  const votesRaw=document.getElementById("iaVotes").value.trim();
-  const votes=votesRaw? votesRaw.split(",").map(s=>{const parts=s.split(">"); return {from:parts[0].trim(),to:parts[1].trim()};}):[];
-  const deadRaw=document.getElementById("iaDead").value.trim();
-  const dead=deadRaw? deadRaw.split(",").map(s=>s.trim()):[];
-  const you=document.getElementById("iaYou").value.trim();
-  const L=+document.getElementById("iaL").value;
+  const playersRaw=document.getElementById("iaPlayers").value;
+  const votesRaw=document.getElementById("iaVotes").value;
+  const deadRaw=document.getElementById("iaDead").value;
 
-  const inInterval=new Set();
-  votes.forEach(v=>{
-    const idxFrom=players.indexOf(v.from)+1;
-    const idxTo=players.indexOf(v.to)+1;
-    if(idxFrom<=0 || idxTo<=0) return;
-    let a=Math.min(idxFrom,idxTo), b=Math.max(idxFrom,idxTo);
-    if(b-a+1>4) b=a+3;
-    for(let i=a;i<=b;i++) inInterval.add(i);
+  if(!playersRaw) {alert("Veuillez entrer les pseudos."); return;}
+  const allPlayers=playersRaw.split(",").map(s=>s.trim()).filter(s=>s);
+  const deadPlayers=deadRaw.split(",").map(s=>s.trim()).filter(s=>s);
+  const votesList=votesRaw.split(",").map(s=>s.trim()).filter(s=>s);
+
+  const alivePlayers=allPlayers.filter(p=>!deadPlayers.includes(p));
+  const votes=[];
+  votesList.forEach(v=>{
+    const [from,to]=v.split(">").map(s=>s.trim());
+    if(from && to) votes.push({from,to});
   });
 
-  const results=[];
-  const totalPlayers=players.length;
-  const R=totalPlayers-inInterval.size-(dead.length>0?dead.length:0)-1; // exclut la personne qui pose la question
-  const I=Math.min(4,totalPlayers-R-dead.length);
+  const intervals=[];
+  votes.forEach(v=>{
+    const idxFrom=allPlayers.indexOf(v.from);
+    const idxTo=allPlayers.indexOf(v.to);
+    let a=Math.min(idxFrom,idxTo), b=Math.max(idxFrom,idxTo);
+    if(b-a+1>4) b=a+3;
+    intervals.push({start:a,end:b});
+  });
 
-  players.forEach(p=>{
-    if(dead.includes(p)) return;
-    if(p===you) return;
-    const idx=players.indexOf(p)+1;
+  const inInterval=new Set();
+  intervals.forEach(inter=>{for(let i=inter.start;i<=inter.end;i++) inInterval.add(i);});
+
+  const totalOutside=alivePlayers.length - inInterval.size;
+
+  let resultsHTML="<h4>Résultats IA</h4>";
+  alivePlayers.forEach(p=>{
+    const idx=allPlayers.indexOf(p);
     if(inInterval.has(idx)) return;
+    const R=totalOutside;
+    const I=Math.min(4,alivePlayers.length-R);
+    const L=+simL.value; // nombre de loups vivants
 
     // FOUDEK
-    let numF=0, denF=0;
+    let numF=0,denF=0;
     for(let k=0;k<=1;k++){
-      if(k>L || L-k>R) continue;
+      if(k>L||L-k>R) continue;
       const c=C(I,k)*C(R,L-k);
       denF+=c; numF+=c*((L-k)/R);
     }
     const pf=(denF>0)? (numF/denF)*100 : 0;
 
     // Classique
-    let numC=0, denC=0;
+    let numC=0,denC=0;
     for(let k=0;k<=2;k++){
-      if(k>L || L-k>R) continue;
+      if(k>L||L-k>R) continue;
       const c=C(I,k)*C(R,L-k);
       denC+=c; numC+=c*((L-k)/R);
     }
     const pc=(denC>0)? (numC/denC)*100 : 0;
 
-    results.push(`${p}: FOUDEK ${pf.toFixed(1)}% | Classique ${pc.toFixed(1)}%`);
+    resultsHTML+=`<div>${p} → FOUDEK : ${pf.toFixed(1)} %, Classique : ${pc.toFixed(1)} %</div>`;
   });
 
-  document.getElementById("iaResults").innerHTML=results.join("<br>");
+  document.getElementById("iaResults").innerHTML=resultsHTML;
 }
 </script>
 </body>
