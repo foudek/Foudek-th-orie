@@ -25,7 +25,7 @@ li{margin:8px 0;}
 .card.blue{box-shadow:0 0 18px rgba(37, 99, 235, 0.35);}
 .card.red{box-shadow:0 0 18px rgba(220, 38, 38, 0.35);}
 label{display:block;margin-top:12px;font-size:14px;}
-input,select{width:100%; margin-top:6px; padding:8px; background:#0e0f14; border:1px solid #3a3d4d; border-radius:6px; color:#e6e7eb;}
+input,select,textarea{width:100%; margin-top:6px; padding:8px; background:#0e0f14; border:1px solid #3a3d4d; border-radius:6px; color:#e6e7eb;}
 button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px; background:#2563eb; color:white; font-weight:bold; cursor:pointer;}
 .result{margin-top:10px; padding:10px; border-radius:999px; text-align:center; font-weight:bold; opacity:0.35; transition:opacity 0.3s, box-shadow 0.3s;}
 .result.blue{background:#1d4ed8;}
@@ -33,28 +33,28 @@ button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px
 .result.active{opacity:1; box-shadow:0 0 20px rgba(255,255,255,0.25);}
 .voteInfo{margin-top:5px; font-size:13px; color:#9ca3af;}
 #simZone{display:flex; flex-wrap:wrap; gap:10px; margin-top:20px;}
-.iaCard{background:#1f2937; border:1px solid #3a3d4d; border-radius:14px; padding:20px; margin-bottom:30px;}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<h1>FOUDEK – Théorie et probabilité hors intervalle</h1>
+<h1>🧠 FOUDEK – IA Probabilités hors intervalle</h1>
 
-<!-- IA Section -->
-<div class="iaCard">
-<h2>🧠 IA – Calcul automatique des probabilités</h2>
-<p>Indiquez la liste des pseudos des joueurs (séparés par une virgule), les votes et les joueurs morts (optionnel).</p>
-<label>Pseudos des joueurs :</label>
-<input id="iaPlayers" placeholder="ex: Medna,Kader,Keraod,Tilf">
-<label>Votes (ex: Medna>Kader,Keraod>Tilf) :</label>
-<input id="iaVotes" placeholder="ex: Medna>Kader,Keraod>Tilf">
-<label>Morts nuit 1 (optionnel, ex: Tilf) :</label>
-<input id="iaDead" placeholder="ex: Tilf">
-<button onclick="runIA()">Calculer</button>
-<div id="iaResults"></div>
+<div class="card" style="margin-bottom:30px;">
+<label>Entrez la liste des joueurs (séparés par des virgules) :</label>
+<textarea id="iaPlayers" rows="2" placeholder="ex: medna,kader,keraod"></textarea>
+<label>Nombre de loups vivants :</label>
+<input id="iaL" type="number" value="2">
+<label>Liste des morts (séparés par des virgules, optionnel) :</label>
+<input id="iaDead" placeholder="ex: zytronx">
+<label>Liste des votes (format 'joueur1>joueur2', séparés par des virgules) :</label>
+<input id="iaVotes" placeholder="ex: medna>kader,keraod>tilf">
+<button onclick="runIA()">Calculer probabilités</button>
+<div id="iaResults" class="result active" style="opacity:1; margin-top:15px;">—</div>
 </div>
+
+<h1>FOUDEK – Théorie et probabilité hors intervalle</h1>
 
 <h2>Pourquoi il n’y a jamais plus de 1 loup sur 4</h2>
 <p>Dans la technique de FOUDEK, on considère uniquement les cas où un intervalle de 4 joueurs contient 0 ou 1 loup.</p>
@@ -215,18 +215,6 @@ function updateSim(){
     for(let i=a;i<=b;i++) inInterval.add(i);
   });
 
-  // Détection des triangles
-  const voteMap={};
-  votes.forEach(v=>voteMap[v.from]=v.to);
-  const triangleSet=new Set();
-  Object.keys(voteMap).forEach(a=>{
-    const b=voteMap[a];
-    if(voteMap[b] && voteMap[voteMap[b]]==a){
-      triangleSet.add(+a); triangleSet.add(+b); triangleSet.add(+voteMap[b]);
-    }
-  });
-  triangleSet.forEach(i=>inInterval.add(i));
-
   const totalPlayers=alive.length;
   const totalOutside=totalPlayers-inInterval.size;
 
@@ -259,70 +247,68 @@ function updateSim(){
   });
 }
 
-/* === IA avec triangles et morts === */
+/* === IA Corrigée === */
 function runIA(){
-  const playerStr=document.getElementById("iaPlayers").value.trim();
-  const voteStr=document.getElementById("iaVotes").value.trim();
-  const deadStr=document.getElementById("iaDead").value.trim();
-  if(!playerStr){iaResults.innerHTML="Entrez au moins un joueur."; return;}
-  const players=playerStr.split(",").map(s=>s.trim());
-  const votes=voteStr? voteStr.split(",").map(v=>{
-    const [from,to]=v.split(">").map(s=>s.trim());
-    return {from, to};
+  const playersText=document.getElementById("iaPlayers").value;
+  const L=+document.getElementById("iaL").value;
+  const deadText=document.getElementById("iaDead").value;
+  const votesText=document.getElementById("iaVotes").value;
+  const iaResults=document.getElementById("iaResults");
+
+  if(!playersText||isNaN(L)||L<=0){ iaResults.textContent="Veuillez entrer tous les champs correctement."; return; }
+
+  const players=playersText.split(",").map(s=>s.trim()).filter(s=>s!=="");
+  const dead=deadText? deadText.split(",").map(s=>s.trim()):[];
+  const votes=votesText? votesText.split(",").map(s=>{
+    const [from,to]=s.split(">").map(x=>x.trim());
+    return {from,to};
   }):[];
-  const dead=deadStr? deadStr.split(",").map(s=>s.trim()):[];
+
+  // On considère que la personne qui demande n'est pas comptée
+  // Alive hors questioner
+  const alivePlayers=players.filter(p=>!dead.includes(p));
+
+  // Identifier intervalles
   const inInterval=new Set();
-
-  // Crée intervalles des votes simples
   votes.forEach(v=>{
-    const i1=players.indexOf(v.from)+1;
-    const i2=players.indexOf(v.to)+1;
-    if(i1>0 && i2>0){
-      let a=Math.min(i1,i2), b=Math.max(i1,i2);
-      if(b-a+1>4) b=a+3;
-      for(let i=a;i<=b;i++) inInterval.add(players[i-1]);
+    const idxFrom=players.indexOf(v.from);
+    const idxTo=players.indexOf(v.to);
+    if(idxFrom===-1 || idxTo===-1) return;
+    let a=Math.min(idxFrom,idxTo),b=Math.max(idxFrom,idxTo);
+    if(b-a+1>4) b=a+3;
+    for(let i=a;i<=b;i++) inInterval.add(players[i]);
+  });
+
+  // Calcul proba hors intervalle pour chaque joueur hors intervalle
+  let results="";
+  alivePlayers.forEach(p=>{
+    if(inInterval.has(p)) return;
+    const R=alivePlayers.length-inInterval.size;
+    const I=Math.min(4,alivePlayers.length-R);
+
+    // FOUDEK
+    let numF=0,denF=0;
+    for(let k=0;k<=1;k++){
+      if(k>L||L-k>R) continue;
+      const c=C(I,k)*C(R,L-k);
+      denF+=c; numF+=c*((L-k)/R);
     }
-  });
+    const pf=(denF>0)? (numF/denF)*100 : 0;
 
-  // Détecte les triangles
-  const voteMap={};
-  votes.forEach(v=>voteMap[v.from]=v.to);
-  Object.keys(voteMap).forEach(a=>{
-    const b=voteMap[a];
-    if(voteMap[b] && voteMap[voteMap[b]]==a){
-      inInterval.add(a); inInterval.add(b); inInterval.add(voteMap[b]);
+    // Classique
+    let numC=0,denC=0;
+    for(let k=0;k<=2;k++){
+      if(k>L||L-k>R) continue;
+      const c=C(I,k)*C(R,L-k);
+      denC+=c; numC+=c*((L-k)/R);
     }
+    const pc=(denC>0)? (numC/denC)*100 : 0;
+
+    results+=`${p} → FOUDEK: ${pf.toFixed(1)} %, Classique: ${pc.toFixed(1)} %\n`;
   });
 
-  // Joueurs hors intervalle
-  const outsidePlayers=players.filter(p=>!inInterval.has(p) && !dead.includes(p));
-  const R=outsidePlayers.length;
-  const I=Math.min(4, players.length-R-dead.length);
-
-  let L=+simL.value;
-
-  // FOUDEK
-  let numF=0,denF=0;
-  for(let k=0;k<=1;k++){
-    if(k>L||L-k>R) continue;
-    const c=C(I,k)*C(R,L-k);
-    denF+=c; numF+=c*((L-k)/R);
-  }
-  const pf=(denF>0)? (numF/denF)*100 : 0;
-
-  // Classique
-  let numC=0,denC=0;
-  for(let k=0;k<=2;k++){
-    if(k>L||L-k>R) continue;
-    const c=C(I,k)*C(R,L-k);
-    denC+=c; numC+=c*((L-k)/R);
-  }
-  const pc=(denC>0)? (numC/denC)*100 : 0;
-
-  let res=`<h3>Résultats IA :</h3>`;
-  outsidePlayers.forEach(p=>{
-    res+=`<p>${p} : FOUDEK ${pf.toFixed(1)} %, Classique ${pc.toFixed(1)} %</p>`;
-  });
-  iaResults.innerHTML=res;
+  iaResults.textContent=results?results:"Tous les joueurs sont dans des intervalles.";
 }
-</
+</script>
+</body>
+</html>
