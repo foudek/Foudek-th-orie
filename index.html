@@ -39,21 +39,25 @@ button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px
 <body>
 <div class="container">
 
-<h1>FOUDEK – Théorie et probabilité hors intervalle</h1>
+<h1>🧠 FOUDEK – Probabilités hors intervalle avec IA</h1>
 
-<!-- === IA corrigée avec interface cerveau 💡 === -->
-<div class="card" style="margin-bottom:30px;">
-  <h3>🧠 IA – Probabilités hors intervalle</h3>
-  <label>Liste des joueurs (séparés par des virgules)</label>
-  <input type="text" id="iaPlayers" placeholder="Ex : Medna, Kader, Tilf">
-  <label>Morts (tour 1) séparés par des virgules</label>
-  <input type="text" id="iaDead" placeholder="Ex : Medna">
-  <label>Votes (ex : Medna vote Kader, Keraod vote Tilf)</label>
-  <textarea id="iaVotes" rows="4" placeholder="Chaque vote sur une ligne"></textarea>
-  <button onclick="runIA()">Calculer IA</button>
-  <div id="iaResF" class="result blue">FOUDEK : —</div>
-  <div id="iaResC" class="result red">Classique : —</div>
+<div class="card">
+  <h3>Intelligence artificielle</h3>
+  <label>Liste des pseudos (séparés par une virgule)</label>
+  <input id="iaPlayers" type="text" placeholder="ex: medna,kader,keraod,tilf,...">
+  <label>Qui a voté qui ? (ex: medna>kader, keraod>tilf)</label>
+  <input id="iaVotes" type="text" placeholder="ex: medna>kader, keraod>tilf">
+  <label>Joueurs morts nuit 1 (séparés par virgule)</label>
+  <input id="iaDead" type="text" placeholder="ex: kader">
+  <label>Votre pseudo (ne sera pas compté comme hors intervalle)</label>
+  <input id="iaYou" type="text" placeholder="ex: medna">
+  <label>Nombre de loups vivants</label>
+  <input id="iaL" type="number" value="2">
+  <button onclick="runIA()">Calculer les probabilités</button>
+  <div id="iaResults"></div>
 </div>
+
+<div class="separator"></div>
 
 <h2>Pourquoi il n’y a jamais plus de 1 loup sur 4</h2>
 <p>Dans la technique de FOUDEK, on considère uniquement les cas où un intervalle de 4 joueurs contient 0 ou 1 loup.</p>
@@ -246,63 +250,51 @@ function updateSim(){
   });
 }
 
-/* === IA corrigée pour exclure l'auteur et calcul fidèle === */
+/* === IA CORRIGÉE === */
 function runIA(){
-  const rawPlayers=document.getElementById("iaPlayers").value.split(",").map(s=>s.trim()).filter(s=>s);
-  const rawDead=document.getElementById("iaDead").value.split(",").map(s=>s.trim()).filter(s=>s);
-  const voteLines=document.getElementById("iaVotes").value.split("\n").map(s=>s.trim()).filter(s=>s);
+  const playersRaw=document.getElementById("iaPlayers").value.trim();
+  if(!playersRaw){ alert("Veuillez entrer les pseudos"); return; }
+  const players=playersRaw.split(",").map(s=>s.trim()).filter(s=>s);
+  const votesRaw=document.getElementById("iaVotes").value.trim();
+  const votes=votesRaw? votesRaw.split(",").map(s=>{const parts=s.split(">"); return {from:parts[0].trim(),to:parts[1].trim()};}):[];
+  const deadRaw=document.getElementById("iaDead").value.trim();
+  const dead=deadRaw? deadRaw.split(",").map(s=>s.trim()):[];
+  const you=document.getElementById("iaYou").value.trim();
+  const L=+document.getElementById("iaL").value;
 
-  if(rawPlayers.length===0) return alert("Entrez au moins un joueur.");
-
-  // On considère que la personne qui pose la question n'est pas hors intervalle
-  const author=rawPlayers[0];
-
-  const alive=rawPlayers.filter(p=>!rawDead.includes(p));
-
-  const votes=[];
-  voteLines.forEach(line=>{
-    const m=line.match(/^(.+?)\s+vote\s+(.+)$/i);
-    if(m) votes.push({from:m[1].trim(),to:m[2].trim()});
-  });
-
-  // Construire intervalles
   const inInterval=new Set();
   votes.forEach(v=>{
-    const idxFrom=rawPlayers.indexOf(v.from);
-    const idxTo=rawPlayers.indexOf(v.to);
-    if(idxFrom<0||idxTo<0) return;
-    let a=Math.min(idxFrom,idxTo),b=Math.max(idxFrom,idxTo);
+    const idxFrom=players.indexOf(v.from)+1;
+    const idxTo=players.indexOf(v.to)+1;
+    if(idxFrom<=0 || idxTo<=0) return;
+    let a=Math.min(idxFrom,idxTo), b=Math.max(idxFrom,idxTo);
     if(b-a+1>4) b=a+3;
-    for(let i=a;i<=b;i++) inInterval.add(rawPlayers[i]);
+    for(let i=a;i<=b;i++) inInterval.add(i);
   });
 
-  // Calcul des joueurs hors intervalle, excluant l'auteur
-  const outside=alive.filter(p=>!inInterval.has(p) && p!==author);
-  const R=outside.length;
-  const I=Math.min(4,alive.length-R);
-
-  const L=2; // nombre de loups vivants (à adapter dynamiquement si tu veux)
-
-  // FOUDEK
-  let numF=0,denF=0;
-  for(let k=0;k<=1;k++){
-    if(k>L||L-k>R) continue;
-    const c=C(I,k)*C(R,L-k);
-    denF+=c; numF+=c*((L-k)/R);
-  }
-  // Classique
-  let numC=0,denC=0;
-  for(let k=0;k<=2;k++){
-    if(k>L||L-k>R) continue;
-    const c=C(I,k)*C(R,L-k);
-    denC+=c; numC+=c*((L-k)/R);
-  }
-
-  const pf=(denF>0)? (numF/denF)*100 : 0;
-  const pc=(denC>0)? (numC/denC)*100 : 0;
-  iaResF.textContent="FOUDEK : "+pf.toFixed(1)+" %";
-  iaResC.textContent="Classique : "+pc.toFixed(1)+" %";
-}
-</script>
-</body>
-</html>
+  const results=[];
+  for(let i=0;i<players.length;i++){
+    const p=players[i];
+    if(dead.includes(p)) continue;
+    if(p===you) continue;
+    const idx=i+1;
+    if(inInterval.has(idx)) continue;
+    const R=players.length - inInterval.size - (dead.length>0?dead.length:0) -1; // exclut la personne qui pose la question
+    const I=Math.min(4,players.length - R - dead.length);
+    // FOUDEK
+    let numF=0,denF=0;
+    for(let k=0;k<=1;k++){
+      if(k>L||L-k>R) continue;
+      const c=C(I,k)*C(R,L-k);
+      denF+=c; numF+=c*((L-k)/R);
+    }
+    const pf=(denF>0)? (numF/denF)*100 : 0;
+    // Classique
+    let numC=0,denC=0;
+    for(let k=0;k<=2;k++){
+      if(k>L||L-k>R) continue;
+      const c=C(I,k)*C(R,L-k);
+      denC+=c; numC+=c*((L-k)/R);
+    }
+    const pc=(denC>0)? (numC/denC)*100 : 0;
+    results.push(`${p}: FOUDEK ${pf.toFixed(1)}% | Classique ${pc.toFixed(1)}
