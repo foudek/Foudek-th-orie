@@ -33,26 +33,23 @@ button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px
 .result.active{opacity:1; box-shadow:0 0 20px rgba(255,255,255,0.25);}
 .voteInfo{margin-top:5px; font-size:13px; color:#9ca3af;}
 #simZone{display:flex; flex-wrap:wrap; gap:10px; margin-top:20px;}
-.iaCard{background:#111; border:1px solid #2a2c36; border-radius:14px; padding:20px; margin-bottom:30px;}
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<h1>🧠 FOUDEK – Théorie et probabilité hors intervalle avec IA</h1>
+<h1>🧠 FOUDEK – IA Probabilités hors intervalle</h1>
 
-<!-- === IA === -->
-<div class="iaCard">
-<h2>Intelligence artificielle – Calcul automatique</h2>
-<label>Liste des joueurs (séparés par des virgules)</label>
-<input id="iaPlayers" placeholder="ex: medna,kader,keraod,tilf,zytronx,player6,player7">
-<label>Votes (ex: medna>kader, keraod>tilf)</label>
-<input id="iaVotes" placeholder="ex: medna>kader, keraod>tilf">
-<label>Morts nuit 1 (séparés par des virgules, si aucun laisse vide)</label>
-<input id="iaDead" placeholder="ex: player5">
-<button onclick="runIA()">Calculer proba</button>
-<div id="iaResults"></div>
+<div class="card" style="margin-bottom:30px;">
+<label>Liste des pseudos (séparés par une virgule)</label>
+<input type="text" id="iaPlayers" placeholder="Ex: Medna,Kader,Keraod,Tyf">
+<label>Pseudos morts nuit 1 (optionnel)</label>
+<input type="text" id="iaDead" placeholder="Ex: Keraod">
+<label>Votes (Ex: Medna>Kader,Keraod>Tyf)</label>
+<input type="text" id="iaVotes" placeholder="Séparez les votes par des virgules">
+<button onclick="runIA()">Calculer IA</button>
+<div id="iaResults" style="margin-top:10px;"></div>
 </div>
 
 <h2>Pourquoi il n’y a jamais plus de 1 loup sur 4</h2>
@@ -208,11 +205,22 @@ function updateSim(){
   if(v2v&&v2t) votes.push({from:v2v,to:v2t});
 
   const inInterval=new Set();
-  votes.forEach(v=>{
-    let a=Math.min(v.from,v.to),b=Math.max(v.from,v.to);
-    if(b-a+1>4) b=a+3;
-    for(let i=a;i<=b;i++) inInterval.add(i);
-  });
+  const graph={};
+  alive.forEach(a=>graph[a]=[]);
+  votes.forEach(v=>{ graph[v.from].push(v.to); });
+
+  function dfs(u,visited,stack){
+    visited.add(u);
+    stack.add(u);
+    for(const v of graph[u]){
+      if(!visited.has(v)) dfs(v,visited,stack);
+      else if(stack.has(v)) stack.forEach(x=>inInterval.add(x));
+    }
+    stack.delete(u);
+  }
+
+  const visited=new Set();
+  alive.forEach(u=>{ if(!visited.has(u)) dfs(u,visited,new Set()); });
 
   const totalPlayers=alive.length;
   const totalOutside=totalPlayers-inInterval.size;
@@ -220,23 +228,13 @@ function updateSim(){
   alive.forEach(idx=>{
     if(inInterval.has(idx)) return;
     const R=totalOutside;
-    const I=4; // Fixe l'intervalle à 4 comme dans les tableaux
+    const I=Math.min(4,totalPlayers-R);
     let numF=0,denF=0;
-    for(let k=0;k<=1;k++){
-      if(k>L||L-k>R) continue;
-      const c=C(I,k)*C(R,L-k);
-      denF+=c; numF+=c*((L-k)/R);
-    }
+    for(let k=0;k<=1;k++){if(k>L||L-k>R) continue; const c=C(I,k)*C(R,L-k); denF+=c; numF+=c*((L-k)/R);}
     const pf=(denF>0)? (numF/denF)*100 : 0;
-
     let numC=0,denC=0;
-    for(let k=0;k<=2;k++){
-      if(k>L||L-k>R) continue;
-      const c=C(I,k)*C(R,L-k);
-      denC+=c; numC+=c*((L-k)/R);
-    }
+    for(let k=0;k<=2;k++){if(k>L||L-k>R) continue; const c=C(I,k)*C(R,L-k); denC+=c; numC+=c*((L-k)/R);}
     const pc=(denC>0)? (numC/denC)*100 : 0;
-
     document.getElementById("pf"+idx).textContent="FOUDEK : "+pf.toFixed(1)+" %";
     document.getElementById("pc"+idx).textContent="Classique : "+pc.toFixed(1)+" %";
   });
@@ -246,58 +244,58 @@ function updateSim(){
   });
 }
 
-/* === IA corrigée === */
+/* === IA nouvelle === */
 function runIA(){
-  const players = document.getElementById("iaPlayers").value.split(",").map(s=>s.trim()).filter(s=>s);
-  const votesInput = document.getElementById("iaVotes").value.split(",").map(s=>s.trim()).filter(s=>s);
-  const deadInput = document.getElementById("iaDead").value.split(",").map(s=>s.trim()).filter(s=>s);
+  const playersRaw=document.getElementById("iaPlayers").value;
+  const deadRaw=document.getElementById("iaDead").value;
+  const votesRaw=document.getElementById("iaVotes").value;
+  if(!playersRaw) return alert("Liste des pseudos obligatoire");
 
-  const votes = votesInput.map(v=>{
-    const [from,to]=v.split(">").map(s=>s.trim());
-    return {from,to};
-  });
+  const allPlayers=playersRaw.split(",").map(p=>p.trim()).filter(p=>p);
+  const dead=deadRaw.split(",").map(p=>p.trim()).filter(p=>p);
+  const votes=votesRaw.split(",").map(v=>v.trim()).filter(v=>v);
 
-  const alive = players.filter(p=>!deadInput.includes(p));
-
-  const inInterval = new Set();
+  const alive=allPlayers.filter(p=>!dead.includes(p));
+  const inInterval=new Set();
+  const graph={};
+  alive.forEach(a=>graph[a]=[]);
   votes.forEach(v=>{
-    const fromIdx = players.indexOf(v.from);
-    const toIdx = players.indexOf(v.to);
-    const a=Math.min(fromIdx,toIdx), b=Math.max(fromIdx,toIdx);
-    if(b-a+1>4) b=a+3;
-    for(let i=a;i<=b;i++) inInterval.add(players[i]);
+    const [from,to]=v.split(">").map(x=>x.trim());
+    if(graph[from]) graph[from].push(to);
   });
 
-  const totalOutside = alive.filter(p=>!inInterval.has(p)).length;
+  function dfs(u,visited,stack){
+    visited.add(u);
+    stack.add(u);
+    for(const v of graph[u]){
+      if(!visited.has(v)) dfs(v,visited,stack);
+      else if(stack.has(v)) stack.forEach(x=>inInterval.add(x));
+    }
+    stack.delete(u);
+  }
 
-  const results = [];
+  const visited=new Set();
+  alive.forEach(u=>{ if(!visited.has(u)) dfs(u,visited,new Set()); });
+
+  const totalPlayers=alive.length;
+  const totalOutside=totalPlayers-inInterval.size;
+  const L=+document.getElementById("simL").value;
+  let resHtml="";
+
   alive.forEach(p=>{
     if(inInterval.has(p)) return;
-    const R = totalOutside;
-    const I = 4; // Intervalle fixe pour FOUDEK
-
-    // FOUDEK
-    let numF=0, denF=0;
-    for(let k=0;k<=1;k++){
-      if(k>2||2-k>R) continue; // 2 loups max
-      const c=C(I,k)*C(R,2-k);
-      denF+=c; numF+=c*((2-k)/R);
-    }
+    const R=totalOutside;
+    const I=Math.min(4,totalPlayers-R);
+    let numF=0,denF=0;
+    for(let k=0;k<=1;k++){if(k>L||L-k>R) continue; const c=C(I,k)*C(R,L-k); denF+=c; numF+=c*((L-k)/R);}
     const pf=(denF>0)? (numF/denF)*100 : 0;
-
-    // Classique
-    let numC=0, denC=0;
-    for(let k=0;k<=2;k++){
-      if(k>2||2-k>R) continue;
-      const c=C(I,k)*C(R,2-k);
-      denC+=c; numC+=c*((2-k)/R);
-    }
+    let numC=0,denC=0;
+    for(let k=0;k<=2;k++){if(k>L||L-k>R) continue; const c=C(I,k)*C(R,L-k); denC+=c; numC+=c*((L-k)/R);}
     const pc=(denC>0)? (numC/denC)*100 : 0;
-
-    results.push(`${p}: FOUDEK ${pf.toFixed(1)}%, Classique ${pc.toFixed(1)}%`);
+    resHtml+=`<div>${p} → FOUDEK : ${pf.toFixed(1)} %, Classique : ${pc.toFixed(1)} %</div>`;
   });
 
-  iaResults.innerHTML = results.join("<br>") || "Tous les joueurs sont dans un intervalle";
+  document.getElementById("iaResults").innerHTML=resHtml || "Tous les joueurs sont dans un intervalle";
 }
 </script>
 </body>
