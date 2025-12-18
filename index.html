@@ -41,9 +41,9 @@ button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px
 
 <h1>FOUDEK – Théorie et probabilité hors intervalle</h1>
 
-<!-- === IA === -->
+<!-- === IA corrigée avec interface cerveau 💡 === -->
 <div class="card" style="margin-bottom:30px;">
-  <h3>💡 IA – Probabilités hors intervalle</h3>
+  <h3>🧠 IA – Probabilités hors intervalle</h3>
   <label>Liste des joueurs (séparés par des virgules)</label>
   <input type="text" id="iaPlayers" placeholder="Ex : Medna, Kader, Tilf">
   <label>Morts (tour 1) séparés par des virgules</label>
@@ -246,7 +246,7 @@ function updateSim(){
   });
 }
 
-/* === IA corrigée === */
+/* === IA corrigée pour exclure l'auteur et calcul fidèle === */
 function runIA(){
   const rawPlayers=document.getElementById("iaPlayers").value.split(",").map(s=>s.trim()).filter(s=>s);
   const rawDead=document.getElementById("iaDead").value.split(",").map(s=>s.trim()).filter(s=>s);
@@ -254,7 +254,11 @@ function runIA(){
 
   if(rawPlayers.length===0) return alert("Entrez au moins un joueur.");
 
+  // On considère que la personne qui pose la question n'est pas hors intervalle
+  const author=rawPlayers[0];
+
   const alive=rawPlayers.filter(p=>!rawDead.includes(p));
+
   const votes=[];
   voteLines.forEach(line=>{
     const m=line.match(/^(.+?)\s+vote\s+(.+)$/i);
@@ -272,27 +276,27 @@ function runIA(){
     for(let i=a;i<=b;i++) inInterval.add(rawPlayers[i]);
   });
 
-  const totalOutside=alive.filter(p=>!inInterval.has(p)).length;
+  // Calcul des joueurs hors intervalle, excluant l'auteur
+  const outside=alive.filter(p=>!inInterval.has(p) && p!==author);
+  const R=outside.length;
+  const I=Math.min(4,alive.length-R);
 
-  let numF=0,denF=0,numC=0,denC=0;
+  const L=2; // nombre de loups vivants (à adapter dynamiquement si tu veux)
 
-  alive.forEach(p=>{
-    if(inInterval.has(p)) return;
-    const R=totalOutside;
-    const I=Math.min(4,alive.length-R);
-    // FOUDEK
-    for(let k=0;k<=1;k++){
-      if(k>rawDead.length || rawDead.length-k>R) continue;
-      const c=C(I,k)*C(R,2-k); // 2 = nombre de loups restant, tu peux lier à L dynamique
-      denF+=c; numF+=c*((2-k)/R);
-    }
-    // Classique
-    for(let k=0;k<=2;k++){
-      if(k>rawDead.length || rawDead.length-k>R) continue;
-      const c=C(I,k)*C(R,2-k);
-      denC+=c; numC+=c*((2-k)/R);
-    }
-  });
+  // FOUDEK
+  let numF=0,denF=0;
+  for(let k=0;k<=1;k++){
+    if(k>L||L-k>R) continue;
+    const c=C(I,k)*C(R,L-k);
+    denF+=c; numF+=c*((L-k)/R);
+  }
+  // Classique
+  let numC=0,denC=0;
+  for(let k=0;k<=2;k++){
+    if(k>L||L-k>R) continue;
+    const c=C(I,k)*C(R,L-k);
+    denC+=c; numC+=c*((L-k)/R);
+  }
 
   const pf=(denF>0)? (numF/denF)*100 : 0;
   const pc=(denC>0)? (numC/denC)*100 : 0;
