@@ -62,17 +62,85 @@ button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px
 
 <h1>FOUDEK – Théorie et probabilité hors intervalle</h1>
 
-<h2>Pourquoi les intervalles sont limités</h2>
-<p>La méthode FOUDEK considère qu’un intervalle rationnel ne peut contenir qu’un seul loup maximum.</p>
+<h2>Principe fondamental des intervalles</h2>
+
+<p>
+La théorie FOUDEK repose sur une hypothèse centrale :  
+un joueur innocent cherche inconsciemment à maximiser la probabilité de voter un loup.
+</p>
+
+<p>
+Pour qu’un vote reste rationnel, la proportion de loups à l’intérieur d’un intervalle
+doit rester strictement inférieure à la proportion de joueurs hors intervalle.
+</p>
+
+<h3>Limitation naturelle selon la taille de l’intervalle</h3>
+
 <ul>
-<li>2 joueurs → 0 ou 1 loup</li>
-<li>3 joueurs → 0 ou 1 loup</li>
-<li>4 joueurs → 0 ou 1 loup</li>
+<li><strong>Intervalle de 2 joueurs</strong> : mondes possibles → 0/2 ou 1/2</li>
+<li><strong>Intervalle de 3 joueurs</strong> : mondes possibles → 0/3 ou 1/3</li>
+<li><strong>Intervalle de 4 joueurs</strong> : mondes possibles → 0/4 ou 1/4</li>
 </ul>
+
+<p>
+Dès qu’un intervalle contient plus d’un loup, la probabilité pour un innocent
+de voter un innocent devient supérieure à celle de voter un loup.
+</p>
+
+<p>
+À ce moment précis, le vote devient irrationnel :  
+un innocent n’a plus intérêt à voter dans l’intervalle.
+Ces mondes sont donc exclus par construction dans FOUDEK.
+</p>
+
+<h3>Conséquence directe</h3>
+
+<p>
+FOUDEK ne cherche pas à deviner où sont les loups,
+mais à éliminer les mondes où un vote rationnel n’existerait plus.
+</p>
+
+<p>
+Les intervalles observés dans une partie réelle
+(2, 3 ou 4 joueurs) émergent naturellement des discussions,
+des votes croisés et des triangles de vote.
+</p>
+
+<div class="separator"></div>
+
+<h2>Calcul de probabilité hors intervalle</h2>
+
+<p>On note :</p>
+<ul>
+<li><strong>I</strong> : taille de l’intervalle (2, 3 ou 4)</li>
+<li><strong>R</strong> : nombre de joueurs hors intervalle</li>
+<li><strong>L</strong> : nombre de loups vivants</li>
+<li><strong>k</strong> : nombre de loups dans l’intervalle (0 ou 1)</li>
+</ul>
+
+<div class="formula">C(I, k) × C(R, L − k)</div>
+<div class="formula">(L − k) / R</div>
+
+<div class="separator"></div>
+
+<h2>Équation universelle FOUDEK</h2>
+
+<div class="formula">
+P =
+Σ<sub>k = 0</sub><sup>1</sup>
+(
+C(I, k) · C(R, L − k)
+/
+Σ<sub>i = 0</sub><sup>1</sup>
+C(I, i) · C(R, L − i)
+)
+× (L − k) / R
+</div>
 
 <div class="separator"></div>
 
 <h2>Calcul de probabilité</h2>
+
 <div class="cards">
 <div class="card blue">
 <h3>🔵 Méthode FOUDEK</h3>
@@ -102,6 +170,7 @@ button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px
 <div class="separator"></div>
 
 <h2>🎭 Activité – Probabilités hors intervalle</h2>
+
 <div class="card">
 <label>Nombre total de joueurs</label>
 <input id="simN" type="number" value="7" min="6">
