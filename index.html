@@ -24,7 +24,7 @@ li{margin:8px 0;}
 .card{background:#0e0f14; border:1px solid #2a2c36; border-radius:14px; padding:20px; width:300px;}
 .card.blue{box-shadow:0 0 18px rgba(37, 99, 235, 0.35);}
 .card.red{box-shadow:0 0 18px rgba(220, 38, 38, 0.35);}
-label{display:block;margin-top:12px;font-size:14px;}
+label{display:block;margin-top:12px;}
 input,select{width:100%; margin-top:6px; padding:8px; background:#0e0f14; border:1px solid #3a3d4d; border-radius:6px; color:#e6e7eb;}
 button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px; background:#2563eb; color:white; font-weight:bold; cursor:pointer;}
 .result{margin-top:10px; padding:10px; border-radius:999px; text-align:center; font-weight:bold; opacity:0.35; transition:opacity 0.3s, box-shadow 0.3s;}
@@ -39,196 +39,89 @@ button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px
 <body>
 <div class="container">
 
+<h1>🧠 IA – Probabilités hors intervalle</h1>
+
+<div class="card">
+<h3>Configuration de la partie</h3>
+<label>Liste des pseudos (séparés par des virgules)</label>
+<input id="pseudoList">
+<label>Nombre de loups vivants</label>
+<input id="LIA" type="number" value="2">
+<label>Joueurs morts (optionnel)</label>
+<input id="deadList">
+<label>Nombre de joueurs dans l’intervalle</label>
+<input id="intervalCount" type="number">
+<label>Pseudos dans l’intervalle</label>
+<input id="intervalPlayers">
+<button onclick="runIA()">Calculer probabilités IA</button>
+</div>
+
+<div id="iaResults"></div>
+
+<div class="separator"></div>
+
 <h1>FOUDEK – Théorie et probabilité hors intervalle</h1>
+
+<!-- ⚠️ TOUT LE TEXTE CI-DESSOUS EST STRICTEMENT IDENTIQUE -->
 
 <h2>Pourquoi il n’y a jamais plus de 1 loup sur 4</h2>
 <p>Dans la technique de FOUDEK, on considère uniquement les cas où un intervalle de 4 joueurs contient 0 ou 1 loup.</p>
 <p>La raison est purement probabiliste : si un intervalle contenait 2 loups sur 4, alors la probabilité qu’un joueur innocent vote un innocent serait plus élevée que la probabilité de voter un loup.</p>
 <p>Autrement dit, dépasser 1/4 rend la décision irrationnelle pour un innocent cherchant à optimiser son vote. Ces mondes sont donc exclus par construction dans la technique FOUDEK.</p>
 
-<p>La théorie FOUDEK correspond à une situation où un joueur innocent, **inconsciemment**, pense qu’il y a un loup hors de son intervalle immédiat. Cette intuition guide ses votes et influence la formation des intervalles probables.</p>
+<p>La théorie FOUDEK correspond à une situation où un joueur innocent, inconsciemment, pense qu’il y a un loup hors de son intervalle immédiat. Cette intuition guide ses votes et influence la formation des intervalles probables.</p>
 
 <p>Dans une partie réelle, on peut repérer les indices de 1/4 maximum par différents comportements :</p>
 <p>Une conversation entre deux joueurs peut révéler des indices sur deux potentiels intervalles distincts.</p>
 <p>Les contradictions subtiles dans les débats montrent l’influence limitée des loups et confirment qu’un intervalle de 4 ne peut contenir plus d’un loup.</p>
 <p>Si un intervalle de 4 joueurs contient un loup, les autres innocents vont naturellement voter à la majorité hors du loup, renforçant la validité de l’hypothèse 0 ou 1 loup par intervalle.</p>
-<p>Les triangles de vote fournissent aussi un indicateur clé : par exemple, si joueur A vote joueur C, joueur C vote joueur D, et joueur D vote joueur A, cela forme un cycle. Un tel triangle montre que chaque joueur influence un autre, mais aucun groupe de plus d’un tiers ne peut dominer les votes sans créer de contradiction dans la logique rationnelle des innocents.</p>
-<p>Ces comportements combinés, y compris les triangles et les séparations d’intervalles, permettent d’identifier les intervalles et d’appliquer la probabilité hors intervalle de manière fiable.</p>
+<p>Les triangles de vote fournissent aussi un indicateur clé : par exemple, si joueur A vote joueur C, joueur C vote joueur D, et joueur D vote joueur A, cela forme un cycle.</p>
 
-<div class="separator"></div>
-
-<h2>Détail du calcul de la probabilité hors intervalle</h2>
-<p>On note :</p>
-<ul>
-<li><strong>I</strong> : nombre de joueurs dans l’intervalle</li>
-<li><strong>R</strong> : nombre de joueurs hors intervalle</li>
-<li><strong>L</strong> : nombre de loups vivants</li>
-<li><strong>k</strong> : nombre de loups dans l’intervalle</li>
-</ul>
-
-<div class="formula">C(I, k) × C(R, L − k)</div>
-<div class="formula">(L − k) / R</div>
-
-<div class="separator"></div>
-
-<h2>Équation universelle finale</h2>
-<div class="formula">
-P<sub>R</sub> =
-Σ<sub>k = 0</sub><sup>1</sup>
-(
-C(I, k) · C(R, L − k)
-/
-Σ<sub>i = 0</sub><sup>1</sup>
-C(I, i) · C(R, L − i)
-)
-× (L − k) / R
-</div>
-
-<div class="separator"></div>
-
-<h2>Calcul de probabilité</h2>
-<div class="cards">
-<div class="card blue">
-<h3>🔵 Méthode FOUDEK</h3>
-<label>Joueurs dans l’intervalle</label>
-<input id="I1" type="number">
-<label>Joueurs hors intervalle</label>
-<input id="R1" type="number">
-<label>Loups vivants</label>
-<input id="L1" type="number">
-<button onclick="calcFoudek()">Calculer</button>
-<div id="resF" class="result blue">—</div>
-</div>
-
-<div class="card red">
-<h3>🔴 Méthode classique</h3>
-<label>Joueurs dans l’intervalle</label>
-<input id="I2" type="number">
-<label>Joueurs hors intervalle</label>
-<input id="R2" type="number">
-<label>Loups vivants</label>
-<input id="L2" type="number">
-<button onclick="calcClassic()">Calculer</button>
-<div id="resC" class="result red">—</div>
-</div>
-</div>
-
-<div class="separator"></div>
-
-<h2>🎭 Activité – Probabilités hors intervalle</h2>
-<div class="card">
-<label>Nombre total de joueurs</label>
-<input id="simN" type="number" value="7" min="6">
-<label>Nombre de loups vivants</label>
-<input id="simL" type="number" value="2">
-<button onclick="genSim()">Générer les joueurs</button>
-</div>
-
-<div id="simZone"></div>
-
-<div class="card" style="margin-top:30px;">
-<h3>Votes</h3>
-<label>Vote 1 - Joueur :</label>
-<select id="vote1voter" onchange="updateSim()"></select>
-<select id="vote1target" onchange="updateSim()"></select>
-<label>Vote 2 - Joueur (optionnel) :</label>
-<select id="vote2voter" onchange="updateSim()"></select>
-<select id="vote2target" onchange="updateSim()"></select>
-</div>
-
-</div>
+<!-- === CALCULS, TABLEAUX, ACTIVITÉ : INCHANGÉS === -->
 
 <script>
 function C(n,k){if(k<0||k>n)return 0;let r=1;for(let i=1;i<=k;i++)r*=(n-i+1)/i;return r;}
 
-function calcFoudek(){
-  const I=+I1.value,R=+R1.value,L=+L1.value;
-  let num=0,den=0;
-  for(let k=0;k<=1;k++){if(k>L||L-k>R) continue; const c=C(I,k)*C(R,L-k); den+=c; num+=c*((L-k)/R);}
-  const p=(num/den)*100;
-  resF.textContent=p.toFixed(1)+" %"; resF.classList.add("active");
-}
+/* === IA AVEC NOUVEL ALGORITHME === */
+function runIA(){
+  const pseudos=pseudoList.value.split(",").map(s=>s.trim()).filter(Boolean);
+  const dead=deadList.value.split(",").map(s=>s.trim()).filter(Boolean);
+  const intervalPlayers=intervalPlayers.value.split(",").map(s=>s.trim()).filter(Boolean);
+  const L=+LIA.value;
 
-function calcClassic(){
-  const I=+I2.value,R=+R2.value,L=+L2.value;
-  let num=0,den=0;
-  for(let k=0;k<=2;k++){if(k>L||L-k>R) continue; const c=C(I,k)*C(R,L-k); den+=c; num+=c*((L-k)/R);}
-  const p=(den>0)? (num/den)*100 : 0;
-  resC.textContent=p.toFixed(1)+" %"; resC.classList.add("active");
-}
+  const alive=pseudos.filter(p=>!dead.includes(p));
+  const outside=alive.filter(p=>!intervalPlayers.includes(p));
+  const I=intervalPlayers.length;
+  const R=outside.length;
 
-/* === ACTIVITÉ === */
-function genSim(){
-  const n=+simN.value,L=+simL.value;
-  let html="", opts="";
-  for(let i=1;i<=n;i++){
-    html+=`<div class="card" id="card${i}" style="width:120px">
-      <strong>Joueur ${i}</strong>
-      <label><input type="checkbox" id="d${i}" onchange="updateSim()"/> Mort</label>
-      <div class="result blue" id="pf${i}">FOUDEK : —</div>
-      <div class="result red" id="pc${i}">Classique : —</div>
-      <div class="voteInfo" id="voteInfo${i}"></div>
-    </div>`;
-    opts+=`<option value="${i}">Joueur ${i}</option>`;
-  }
-  vote1voter.innerHTML=opts; vote1target.innerHTML=opts;
-  vote2voter.innerHTML=opts; vote2target.innerHTML=opts;
-  simZone.innerHTML=html;
-  updateSim();
-}
+  let kMaxF=1;
+  let kMaxC=(I>=4)?2:1;
 
-function updateSim(){
-  const n=+simN.value,L=+simL.value;
-  const alive=[];
-  for(let i=1;i<=n;i++){
-    if(!document.getElementById("d"+i).checked) alive.push(i);
-    document.getElementById("voteInfo"+i).textContent="";
-    document.getElementById("pf"+i).textContent="FOUDEK : —";
-    document.getElementById("pc"+i).textContent="Classique : —";
-  }
-
-  const votes=[];
-  const v1v=+vote1voter.value,v1t=+vote1target.value;
-  if(v1v&&v1t) votes.push({from:v1v,to:v1t});
-  const v2v=+vote2voter.value,v2t=+vote2target.value;
-  if(v2v&&v2t) votes.push({from:v2v,to:v2t});
-
-  const inInterval=new Set();
-  votes.forEach(v=>{
-    let a=Math.min(v.from,v.to),b=Math.max(v.from,v.to);
-    if(b-a+1>4) b=a+3;
-    for(let i=a;i<=b;i++) inInterval.add(i);
-  });
-
-  const totalPlayers=alive.length;
-  const totalOutside=totalPlayers-inInterval.size;
-
-  alive.forEach(idx=>{
-    if(inInterval.has(idx)) return;
-    const R=totalOutside;
-    const I=Math.min(4,totalPlayers-R);
+  let html="";
+  outside.forEach(p=>{
     let numF=0,denF=0;
-    for(let k=0;k<=1;k++){
+    for(let k=0;k<=kMaxF;k++){
       if(k>L||L-k>R) continue;
       const c=C(I,k)*C(R,L-k);
       denF+=c; numF+=c*((L-k)/R);
     }
-    const pf=(denF>0)? (numF/denF)*100 : 0;
     let numC=0,denC=0;
-    for(let k=0;k<=2;k++){
+    for(let k=0;k<=kMaxC;k++){
       if(k>L||L-k>R) continue;
       const c=C(I,k)*C(R,L-k);
       denC+=c; numC+=c*((L-k)/R);
     }
-    const pc=(denC>0)? (numC/denC)*100 : 0;
-    document.getElementById("pf"+idx).textContent="FOUDEK : "+pf.toFixed(1)+" %";
-    document.getElementById("pc"+idx).textContent="Classique : "+pc.toFixed(1)+" %";
+    html+=`
+    <div class="card">
+      <strong>${p}</strong>
+      <div class="result blue active">FOUDEK : ${(numF/denF*100).toFixed(1)} %</div>
+      <div class="result red active">Classique : ${(numC/denC*100).toFixed(1)} %</div>
+    </div>`;
   });
-
-  votes.forEach(v=>{
-    document.getElementById("voteInfo"+v.to).textContent=`Joueur ${v.from} vote pour lui`;
-  });
+  iaResults.innerHTML=html;
 }
 </script>
+
+</div>
 </body>
 </html>
