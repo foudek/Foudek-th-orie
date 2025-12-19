@@ -50,9 +50,9 @@ button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px
 <label>Joueurs morts (optionnel)</label>
 <input id="deadList" placeholder="ex: medna,keraod">
 <label>Taille de l’intervalle (2, 3 ou 4)</label>
-<input type="number" id="intervalCount" value="4" min="2" max="4">
+<input type="number" id="intervalSize" value="4" min="2" max="4">
 <label>Pseudos des joueurs dans l’intervalle</label>
-<input id="intervalPlayers" placeholder="ex: kader,tilf">
+<input id="intervalList" placeholder="ex: kader,tilf">
 <button onclick="runIA()">Calculer probabilités IA</button>
 </div>
 
@@ -63,42 +63,12 @@ button{width:100%; margin-top:16px; padding:10px; border:none; border-radius:6px
 <h1>FOUDEK – Théorie et probabilité hors intervalle</h1>
 
 <h2>Pourquoi les intervalles sont limités</h2>
-<p>La technique FOUDEK repose sur une hypothèse fondamentale : un intervalle rationnel ne peut contenir qu’un seul loup au maximum.</p>
-<p>Cette règle s’adapte dynamiquement à la taille de l’intervalle :</p>
+<p>La méthode FOUDEK considère qu’un intervalle rationnel ne peut contenir qu’un seul loup maximum.</p>
 <ul>
-<li>Intervalle de 2 joueurs → 0 ou 1 loup (1/2 max)</li>
-<li>Intervalle de 3 joueurs → 0 ou 1 loup (1/3 max)</li>
-<li>Intervalle de 4 joueurs → 0 ou 1 loup (1/4 max)</li>
+<li>2 joueurs → 0 ou 1 loup</li>
+<li>3 joueurs → 0 ou 1 loup</li>
+<li>4 joueurs → 0 ou 1 loup</li>
 </ul>
-<p>Au-delà de ces seuils, la probabilité qu’un innocent vote un innocent devient supérieure à celle de voter un loup, ce qui rend la décision irrationnelle.</p>
-
-<div class="separator"></div>
-
-<h2>Détail du calcul</h2>
-<ul>
-<li><strong>I</strong> : taille de l’intervalle (2, 3 ou 4)</li>
-<li><strong>R</strong> : joueurs hors intervalle</li>
-<li><strong>L</strong> : loups vivants</li>
-<li><strong>k</strong> : loups dans l’intervalle (0 ou 1)</li>
-</ul>
-
-<div class="formula">C(I, k) × C(R, L − k)</div>
-<div class="formula">(L − k) / R</div>
-
-<div class="separator"></div>
-
-<h2>Équation universelle</h2>
-<div class="formula">
-P =
-Σ<sub>k = 0</sub><sup>1</sup>
-(
-C(I, k) · C(R, L − k)
-/
-Σ<sub>i = 0</sub><sup>1</sup>
-C(I, i) · C(R, L − i)
-)
-× (L − k) / R
-</div>
 
 <div class="separator"></div>
 
@@ -162,9 +132,7 @@ function C(n,k){
   return r;
 }
 
-/* ===== CALCULS ===== */
-function calcFoudek(){
-  const I=+I1.value,R=+R1.value,L=+L1.value;
+function foudekProb(I,R,L){
   let num=0,den=0;
   for(let k=0;k<=1;k++){
     if(k>L||L-k>R) continue;
@@ -172,12 +140,10 @@ function calcFoudek(){
     den+=c;
     num+=c*((L-k)/R);
   }
-  resF.textContent=((num/den)*100).toFixed(1)+" %";
-  resF.classList.add("active");
+  return den>0 ? (num/den)*100 : 0;
 }
 
-function calcClassic(){
-  const I=+I2.value,R=+R2.value,L=+L2.value;
+function classicProb(I,R,L){
   let num=0,den=0;
   for(let k=0;k<=I;k++){
     if(k>L||L-k>R) continue;
@@ -185,14 +151,22 @@ function calcClassic(){
     den+=c;
     num+=c*((L-k)/R);
   }
-  resC.textContent=((num/den)*100).toFixed(1)+" %";
+  return den>0 ? (num/den)*100 : 0;
+}
+
+function calcFoudek(){
+  resF.textContent=foudekProb(+I1.value,+R1.value,+L1.value).toFixed(1)+" %";
+  resF.classList.add("active");
+}
+
+function calcClassic(){
+  resC.textContent=classicProb(+I2.value,+R2.value,+L2.value).toFixed(1)+" %";
   resC.classList.add("active");
 }
 
-/* ===== ACTIVITÉ ===== */
 function genSim(){
   const n=+simN.value;
-  let html="", opts="";
+  let html="",opts="";
   for(let i=1;i<=n;i++){
     html+=`<div class="card" style="width:120px">
       <strong>Joueur ${i}</strong>
@@ -203,10 +177,7 @@ function genSim(){
     </div>`;
     opts+=`<option value="${i}">Joueur ${i}</option>`;
   }
-  vote1voter.innerHTML=opts;
-  vote1target.innerHTML=opts;
-  vote2voter.innerHTML=opts;
-  vote2target.innerHTML=opts;
+  vote1voter.innerHTML=vote1target.innerHTML=vote2voter.innerHTML=vote2target.innerHTML=opts;
   simZone.innerHTML=html;
   updateSim();
 }
@@ -216,61 +187,52 @@ function updateSim(){
   const alive=[];
   for(let i=1;i<=n;i++){
     if(!document.getElementById("d"+i).checked) alive.push(i);
-    pf${i}.textContent="FOUDEK : —";
-    pc${i}.textContent="Classique : —";
-    voteInfo${i}.textContent="";
+    document.getElementById("voteInfo"+i).textContent="";
+    document.getElementById("pf"+i).textContent="FOUDEK : —";
+    document.getElementById("pc"+i).textContent="Classique : —";
   }
 
   const votes=[];
-  if(vote1voter.value && vote1target.value) votes.push({from:+vote1voter.value,to:+vote1target.value});
-  if(vote2voter.value && vote2target.value) votes.push({from:+vote2voter.value,to:+vote2target.value});
+  if(vote1voter.value&&vote1target.value) votes.push({from:+vote1voter.value,to:+vote1target.value});
+  if(vote2voter.value&&vote2target.value) votes.push({from:+vote2voter.value,to:+vote2target.value});
 
-  const inInterval=new Set();
+  const interval=new Set();
   votes.forEach(v=>{
-    let a=Math.min(v.from,v.to), b=Math.max(v.from,v.to);
-    for(let i=a;i<=b;i++) inInterval.add(i);
+    let a=Math.min(v.from,v.to),b=Math.max(v.from,v.to);
+    for(let i=a;i<=b;i++) interval.add(i);
   });
 
-  const R=alive.filter(i=>!inInterval.has(i)).length;
-  const I=Math.min(4,inInterval.size);
+  const I=Math.min(4,interval.size);
+  const R=alive.filter(i=>!interval.has(i)).length;
 
   alive.forEach(i=>{
-    if(inInterval.has(i)) return;
-    let num=0,den=0;
-    for(let k=0;k<=1;k++){
-      if(k>L||L-k>R) continue;
-      const c=C(I,k)*C(R,L-k);
-      den+=c;
-      num+=c*((L-k)/R);
-    }
-    pf${i}.textContent="FOUDEK : "+((num/den)*100).toFixed(1)+" %";
+    if(interval.has(i)) return;
+    document.getElementById("pf"+i).textContent="FOUDEK : "+foudekProb(I,R,L).toFixed(1)+" %";
+    document.getElementById("pc"+i).textContent="Classique : "+classicProb(I,R,L).toFixed(1)+" %";
+  });
+
+  votes.forEach(v=>{
+    document.getElementById("voteInfo"+v.to).textContent=`Joueur ${v.from} vote pour lui`;
   });
 }
 
-/* ===== IA ===== */
 function runIA(){
   const pseudos=pseudoList.value.split(",").map(s=>s.trim()).filter(Boolean);
   const dead=deadList.value.split(",").map(s=>s.trim()).filter(Boolean);
-  const intervalPlayers=intervalPlayers.value.split(",").map(s=>s.trim()).filter(Boolean);
-  const I=Math.min(4,+intervalCount.value);
+  const interval=intervalList.value.split(",").map(s=>s.trim()).filter(Boolean);
+  const I=Math.min(4,+intervalSize.value);
   const L=+LIA.value;
 
   const alive=pseudos.filter(p=>!dead.includes(p));
-  const outside=alive.filter(p=>!intervalPlayers.includes(p));
+  const outside=alive.filter(p=>!interval.includes(p));
   const R=outside.length;
 
   let html="";
   outside.forEach(p=>{
-    let num=0,den=0;
-    for(let k=0;k<=1;k++){
-      if(k>L||L-k>R) continue;
-      const c=C(I,k)*C(R,L-k);
-      den+=c;
-      num+=c*((L-k)/R);
-    }
     html+=`<div class="card">
       <strong>${p}</strong>
-      <div class="result blue active">FOUDEK : ${((num/den)*100).toFixed(1)} %</div>
+      <div class="result blue active">FOUDEK : ${foudekProb(I,R,L).toFixed(1)} %</div>
+      <div class="result red active">Classique : ${classicProb(I,R,L).toFixed(1)} %</div>
     </div>`;
   });
   iaResults.innerHTML=html;
